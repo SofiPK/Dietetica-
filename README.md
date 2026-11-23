@@ -88,10 +88,50 @@ erDiagram
         float subtotal
     }
 
+    CLIENTE {
+        int id PK
+        string nombre
+        string apellido
+        string telefono
+        string email
+        boolean recibe_promociones
+        datetime fecha_registro
+    }
+
+    PROVEEDOR {
+        int id PK
+        string razon_social
+        string cuit
+        string rubro
+        string telefono
+        string email
+        boolean activo
+    }
+
+    CAJA_MOVIMIENTO {
+        int id PK
+        datetime fecha
+        string tipo
+        string concepto
+        float monto
+        int usuario_id FK
+        int venta_id FK
+    }
+
     USUARIO ||--o{ VENTA : "registra"
     VENTA ||--|{ DETALLE_VENTA : "contiene"
     PRODUCTO ||--o{ DETALLE_VENTA : "aparece en"
+    USUARIO ||--o{ CAJA_MOVIMIENTO : "opera"
+    VENTA ||--o| CAJA_MOVIMIENTO : "genera"
 ```
+
+### Módulos Complementarios Implementados
+
+- **Clientes y Promociones:** Base de datos de clientes con canal de WhatsApp y correo para el envío de promociones semanales.
+- **Proveedores:** Catálogo de distribuidores mayoristas clasificados por rubro (frutos secos, cereales, semillas, etc.).
+- **Caja y Tesorería Diferenciada:**
+  - *Caja Empleado (Administrativo):* Monitoreo exclusivo de ventas cobradas durante su turno activo.
+  - *Caja General (Gerente):* Arqueo global con registro de egresos (pago a proveedores, impuestos, alquiler) y cálculo de saldo neto en caja en tiempo real.
 
 ### Decisiones de Diseño Adoptadas
 

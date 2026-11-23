@@ -158,6 +158,7 @@ body {
 /* Dropdown Usuario en el Header */
 .user-dropdown-wrapper {
     position: relative;
+    display: inline-block;
 }
 
 .user-dropdown-btn {
@@ -170,6 +171,7 @@ body {
     gap: 0.6rem;
     cursor: pointer;
     transition: background-color 0.15s;
+    white-space: nowrap;
 }
 
 .user-dropdown-btn:hover {
@@ -189,52 +191,32 @@ body {
 
 .user-dropdown-content {
     position: absolute;
+    left: 0;
     right: 0;
-    top: 110%;
+    top: calc(100% + 4px);
+    width: 100%;
+    min-width: 100%;
+    box-sizing: border-box;
     background: #ffffff;
-    min-width: 200px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-    padding: 0.5rem 0;
+    padding: 0.25rem 0;
     z-index: 200;
-}
-
-.dropdown-header {
-    padding: 0.75rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-}
-
-.dropdown-header strong {
-    font-size: 0.9rem;
-    color: var(--text-primary);
-}
-
-.dropdown-header small {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    font-weight: 600;
-}
-
-.dropdown-divider {
-    border: none;
-    border-top: 1px solid var(--border-color);
-    margin: 0.4rem 0;
 }
 
 .dropdown-item {
     width: 100%;
-    text-align: left;
-    padding: 0.65rem 1rem;
+    box-sizing: border-box;
+    text-align: center;
+    padding: 0.65rem 0.85rem;
     background: none;
     border: none;
     font-size: 0.88rem;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     transition: background-color 0.15s;
+    display: block;
 }
 
 .dropdown-item:hover {
@@ -774,18 +756,243 @@ body {
     color: #ffffff;
 }
 
-/* ================= MODAL ================= */
+/* ================= MODAL REMITO COMERCIAL ================= */
+.modal-remito-card {
+    max-width: 860px;
+    width: 95%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    box-sizing: border-box;
+}
+
+.remito-paper {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    color: var(--text-primary);
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+}
+
+.remito-header-grid {
+    display: grid;
+    grid-template-columns: 2.2fr 1fr 2fr;
+    gap: 1rem;
+    border-bottom: 2px solid var(--text-primary);
+    padding-bottom: 1.2rem;
+    margin-bottom: 1.2rem;
+    align-items: center;
+}
+
+.remito-empresa-nombre {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -0.5px;
+}
+
+.remito-empresa-rubro {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.remito-empresa-dir {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+
+.remito-col-letra {
+    text-align: center;
+}
+
+.remito-box-letra {
+    border: 2px solid var(--text-primary);
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    padding: 0.4rem;
+    border-radius: 4px;
+    background: #ffffff;
+}
+
+.letra-r {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.letra-sub {
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-top: 0.2rem;
+    text-align: center;
+}
+
+.remito-col-datos {
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.remito-doc-titulo {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.3rem;
+}
+
+.remito-cliente-banner {
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    margin-bottom: 1.2rem;
+    border-radius: var(--radius);
+}
+
+.remito-items-table {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-collapse: collapse;
+    margin-bottom: 1.2rem;
+    table-layout: fixed;
+}
+
+.remito-items-table th,
+.remito-items-table td {
+    padding: 0.65rem 0.75rem;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.remito-items-table th {
+    background: #f1f5f9;
+    font-weight: 700;
+}
+
+.remito-items-table th:nth-child(1),
+.remito-items-table td:nth-child(1) {
+    width: 15%;
+}
+
+.remito-items-table th:nth-child(2),
+.remito-items-table td:nth-child(2) {
+    width: 39%;
+    word-break: break-word;
+}
+
+.remito-items-table th:nth-child(3),
+.remito-items-table td:nth-child(3) {
+    width: 12%;
+    text-align: center;
+}
+
+.remito-items-table th:nth-child(4),
+.remito-items-table td:nth-child(4) {
+    width: 17%;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.remito-items-table th:nth-child(5),
+.remito-items-table td:nth-child(5) {
+    width: 17%;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.remito-footer-grid {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.firma-linea {
+    border-top: 1px dashed #64748b;
+    width: 220px;
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    padding-top: 0.5rem;
+    margin-top: 2rem;
+}
+
+.remito-totales-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    white-space: nowrap;
+}
+
+.remito-total-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.8rem;
+    white-space: nowrap;
+}
+
+.remito-total-txt {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.remito-total-val {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: var(--primary);
+    white-space: nowrap;
+}
+
+/* Soporte de Impresión de Remito */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #remito-printable, #remito-printable * {
+        visibility: visible;
+    }
+    #remito-printable {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        border: none;
+    }
+}
+
 .modal-backdrop {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.45);
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     z-index: 1000;
+    padding: 1.5rem 1rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-card {
@@ -793,18 +1000,21 @@ body {
     width: 100%;
     max-width: 520px;
     border-radius: var(--radius);
-    padding: 2rem;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    padding: 1.8rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
     border: 1px solid var(--border-color);
+    margin: auto 0;
+    position: relative;
 }
 
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.2rem;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 0.75rem;
+    flex-shrink: 0;
 }
 
 .btn-close {
@@ -819,9 +1029,10 @@ body {
     display: flex;
     justify-content: flex-end;
     gap: 0.8rem;
-    margin-top: 1.5rem;
+    margin-top: 1.2rem;
     border-top: 1px solid var(--border-color);
     padding-top: 1rem;
+    flex-shrink: 0;
 }
 
 .search-bar input {
@@ -831,4 +1042,135 @@ body {
     border-radius: var(--radius);
     font-size: 0.9rem;
     margin-bottom: 1rem;
+}
+
+/* ============================================================
+   DISEÑO 100% RESPONSIVE (MOBILE & TABLET ADAPTATION)
+   ============================================================ */
+
+@media (max-width: 992px) {
+    .main-content {
+        padding: 1.5rem;
+    }
+
+    .grid-venta {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-header {
+        padding: 0 1rem;
+    }
+
+    .header-brand-title {
+        font-size: 1.05rem;
+    }
+
+    .header-brand-subtitle {
+        font-size: 0.68rem;
+    }
+
+    /* Menú lateral tipo drawer flotante en pantallas chicas */
+    .sidebar {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        bottom: 0;
+        width: 260px;
+        z-index: 150;
+        box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
+        transform: translateX(0);
+        transition: transform 0.25s ease;
+    }
+
+    .sidebar.collapsed {
+        display: flex;
+        transform: translateX(-100%);
+    }
+
+    .main-content {
+        padding: 1rem 0.85rem;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+
+    .erp-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.6rem;
+    }
+
+    .metrics-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .metric-value {
+        font-size: 1.4rem;
+    }
+
+    .modal-card {
+        padding: 1.2rem;
+    }
+
+    .modal-remito-card {
+        padding: 1rem;
+        max-height: 94vh;
+    }
+
+    .remito-paper {
+        padding: 1rem;
+    }
+
+    .remito-header-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 0.8rem;
+    }
+
+    .remito-footer-grid {
+        flex-direction: column-reverse;
+        align-items: center;
+        gap: 1.2rem;
+    }
+
+    .firma-linea {
+        margin-top: 1rem;
+        width: 100%;
+        max-width: 240px;
+    }
+
+    .table th, .table td {
+        padding: 0.6rem 0.7rem;
+        font-size: 0.82rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-brand-subtitle {
+        display: none;
+    }
+
+    .user-name {
+        max-width: 90px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .metrics-row {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-footer {
+        flex-direction: column-reverse;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+    }
 }

@@ -85,6 +85,61 @@ CREATE TABLE IF NOT EXISTS detalle_venta (
 );
 
 -- ============================================================
+--  TABLA: cliente (promociones y fidelización)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS cliente (
+    id                  INT             NOT NULL AUTO_INCREMENT,
+    nombre              VARCHAR(100)    NOT NULL,
+    apellido            VARCHAR(100)    NOT NULL,
+    telefono            VARCHAR(50)     NOT NULL,
+    email               VARCHAR(150),
+    recibe_promociones  TINYINT(1)      NOT NULL DEFAULT 1,
+    fecha_registro      DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (id)
+);
+
+-- ============================================================
+--  TABLA: proveedor
+-- ============================================================
+CREATE TABLE IF NOT EXISTS proveedor (
+    id                  INT             NOT NULL AUTO_INCREMENT,
+    razon_social        VARCHAR(150)    NOT NULL,
+    cuit                VARCHAR(20)     NOT NULL,
+    rubro               VARCHAR(100)    NOT NULL,
+    telefono            VARCHAR(50)     NOT NULL,
+    email               VARCHAR(150),
+    activo              TINYINT(1)      NOT NULL DEFAULT 1,
+
+    PRIMARY KEY (id)
+);
+
+-- ============================================================
+--  TABLA: caja_movimiento (tesorería, ingresos y egresos)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS caja_movimiento (
+    id                  INT             NOT NULL AUTO_INCREMENT,
+    fecha               DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    tipo                ENUM(
+                            'INGRESO_VENTA',
+                            'INGRESO_MANUAL',
+                            'EGRESO_PROVEEDOR',
+                            'EGRESO_IMPUESTOS',
+                            'EGRESO_GASTOS'
+                        )               NOT NULL,
+    concepto            VARCHAR(250)    NOT NULL,
+    monto               DECIMAL(10,2)   NOT NULL,
+    usuario_id          INT             NOT NULL,
+    venta_id            INT             NULL,
+
+    PRIMARY KEY (id),
+    CONSTRAINT fk_caja_usuario
+        FOREIGN KEY (usuario_id) REFERENCES usuario(id),
+    CONSTRAINT fk_caja_venta
+        FOREIGN KEY (venta_id)   REFERENCES venta(id)
+);
+
+-- ============================================================
 --  DATOS INICIALES
 -- ============================================================
 

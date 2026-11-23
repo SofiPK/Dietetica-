@@ -83,6 +83,17 @@ public class VentaDAO {
                 }
             }
 
+            // 4. REGISTRAR MOVIMIENTO AUTOMÁTICO EN CAJA (INGRESO POR VENTA)
+            String sqlCaja = "INSERT INTO caja_movimiento (tipo, concepto, monto, usuario_id, venta_id) VALUES (?, ?, ?, ?, ?)";
+            try (PreparedStatement stmtCaja = conn.prepareStatement(sqlCaja)) {
+                stmtCaja.setString(1, "INGRESO_VENTA");
+                stmtCaja.setString(2, "Venta en mostrador #" + ventaId);
+                stmtCaja.setDouble(3, venta.getImporteTotal());
+                stmtCaja.setInt(4, venta.getUsuarioId());
+                stmtCaja.setInt(5, ventaId);
+                stmtCaja.executeUpdate();
+            }
+
             conn.commit(); // CONFIRMAR TRANSACCIÓN
             return true;
 

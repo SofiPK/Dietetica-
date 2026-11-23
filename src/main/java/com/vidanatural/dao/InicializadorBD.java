@@ -85,6 +85,49 @@ public class InicializadorBD {
                     ");"
                 );
 
+                // Tabla cliente (para promociones y fidelización)
+                stmt.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS cliente (" +
+                    "  id INT NOT NULL AUTO_INCREMENT," +
+                    "  nombre VARCHAR(100) NOT NULL," +
+                    "  apellido VARCHAR(100) NOT NULL," +
+                    "  telefono VARCHAR(50) NOT NULL," +
+                    "  email VARCHAR(150)," +
+                    "  recibe_promociones TINYINT(1) NOT NULL DEFAULT 1," +
+                    "  fecha_registro DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "  PRIMARY KEY (id)" +
+                    ");"
+                );
+
+                // Tabla proveedor
+                stmt.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS proveedor (" +
+                    "  id INT NOT NULL AUTO_INCREMENT," +
+                    "  razon_social VARCHAR(150) NOT NULL," +
+                    "  cuit VARCHAR(20) NOT NULL," +
+                    "  rubro VARCHAR(100) NOT NULL," +
+                    "  telefono VARCHAR(50) NOT NULL," +
+                    "  email VARCHAR(150)," +
+                    "  activo TINYINT(1) NOT NULL DEFAULT 1," +
+                    "  PRIMARY KEY (id)" +
+                    ");"
+                );
+
+                // Tabla caja_movimiento (gestión de caja, ingresos por ventas y egresos por pagos)
+                stmt.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS caja_movimiento (" +
+                    "  id INT NOT NULL AUTO_INCREMENT," +
+                    "  fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "  tipo ENUM('INGRESO_VENTA', 'INGRESO_MANUAL', 'EGRESO_PROVEEDOR', 'EGRESO_IMPUESTOS', 'EGRESO_GASTOS') NOT NULL," +
+                    "  concepto VARCHAR(250) NOT NULL," +
+                    "  monto DECIMAL(10,2) NOT NULL," +
+                    "  usuario_id INT NOT NULL," +
+                    "  venta_id INT NULL," +
+                    "  PRIMARY KEY (id)," +
+                    "  FOREIGN KEY (usuario_id) REFERENCES usuario(id)" +
+                    ");"
+                );
+
                 // Insertar usuarios de prueba si no existen
                 try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM usuario;")) {
                     if (rs.next() && rs.getInt(1) == 0) {
@@ -110,6 +153,31 @@ public class InicializadorBD {
                             "('SP001', 'Spirulina en polvo 100g', 'SUPLEMENTO', 4200.00, 15, 3);"
                         );
                         System.out.println("✅ Productos de prueba cargados.");
+                    }
+                }
+
+                // Insertar clientes de prueba si no existen
+                try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM cliente;")) {
+                    if (rs.next() && rs.getInt(1) == 0) {
+                        stmt.executeUpdate(
+                            "INSERT INTO cliente (nombre, apellido, telefono, email, recibe_promociones) VALUES " +
+                            "('Laura', 'Fernández', '11-4567-8901', 'laura.fernandez@gmail.com', 1)," +
+                            "('Martín', 'Benítez', '11-8899-2233', 'mbenitez@hotmail.com', 1)," +
+                            "('Lucía', 'Gómez', '11-3322-1144', 'lucia.gomez@gmail.com', 0);"
+                        );
+                        System.out.println("✅ Clientes de prueba creados.");
+                    }
+                }
+
+                // Insertar proveedores de prueba si no existen
+                try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM proveedor;")) {
+                    if (rs.next() && rs.getInt(1) == 0) {
+                        stmt.executeUpdate(
+                            "INSERT INTO proveedor (razon_social, cuit, rubro, telefono, email, activo) VALUES " +
+                            "('Distribuidora Cuyo S.A.', '30-71123456-8', 'FRUTOS SECOS Y SEMILLAS', '011-4899-1000', 'ventas@distribuidoracuyo.com.ar', 1)," +
+                            "('Molinos del Sur S.R.L.', '30-65987412-3', 'CEREALES Y LEGUMBRES', '0291-455-8899', 'contacto@molinosdelsur.com.ar', 1);"
+                        );
+                        System.out.println("✅ Proveedores de prueba cargados.");
                     }
                 }
 

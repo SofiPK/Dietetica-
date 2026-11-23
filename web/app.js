@@ -99,16 +99,10 @@ function mostrarPanelPrincipal() {
     // Datos en el header superior
     const nombreCompleto = `${usuarioActual.nombre} ${usuarioActual.apellido}`;
     document.getElementById("header-user-name").textContent = nombreCompleto;
-    document.getElementById("dropdown-full-name").textContent = nombreCompleto;
-    document.getElementById("dropdown-role").textContent = usuarioActual.perfil;
 
     const badge = document.getElementById("header-user-badge");
     badge.textContent = usuarioActual.perfil;
     badge.className = `badge ${usuarioActual.perfil === "ADMINISTRATIVO" ? "badge-admin" : "badge-gerente"}`;
-
-    // Datos en la barra lateral
-    document.getElementById("sidebar-user-display").textContent = nombreCompleto;
-    document.getElementById("sidebar-role-display").textContent = usuarioActual.perfil;
 
     // Configurar menú según rol
     const esAdmin = usuarioActual.perfil === "ADMINISTRATIVO";
@@ -118,6 +112,9 @@ function mostrarPanelPrincipal() {
     document.getElementById("nav-productos").style.display = esAdmin ? "block" : "none";
     document.getElementById("nav-historial-ventas").style.display = "block"; // Visible para ambos
     document.getElementById("nav-stock-bajo").style.display = (esGerente || esAdmin) ? "block" : "none";
+    document.getElementById("nav-clientes").style.display = "block"; // Visible para ambos
+    document.getElementById("nav-proveedores").style.display = esGerente ? "block" : "none"; // Proveedores en Gerencia
+    document.getElementById("nav-caja").style.display = "block"; // Visible para ambos con vista diferenciada
     document.getElementById("nav-recaudacion").style.display = esGerente ? "block" : "none";
 
     if (esAdmin) {
@@ -143,6 +140,9 @@ function cambiarSeccion(seccion) {
     if (seccion === "stock-bajo") cargarStockBajo();
     if (seccion === "historial-ventas") cargarHistorialVentasERP();
     if (seccion === "recaudacion") consultarRecaudacion();
+    if (seccion === "clientes") cargarClientes();
+    if (seccion === "proveedores") cargarProveedores();
+    if (seccion === "caja") cargarCaja();
 }
 
 // ============================================================
@@ -353,7 +353,6 @@ function renderizarHistorialVentas(ventas) {
     ventas.forEach(v => {
         const fechaFmt = v.fecha ? v.fecha.replace("T", " ").substring(0, 19) : "-";
         
-        // Fila Principal
         const trPrincipal = document.createElement("tr");
         trPrincipal.id = `fila-venta-${v.id}`;
         trPrincipal.innerHTML = `
@@ -362,74 +361,54 @@ function renderizarHistorialVentas(ventas) {
             <td><strong>$ ${v.importeTotal.toFixed(2)}</strong></td>
             <td><span class="badge badge-success">${v.estado}</span></td>
             <td class="text-center">
-                <button class="btn-expand-sale" id="btn-expand-${v.id}" onclick="toggleDetalleVentaERP(${v.id})" title="Ver productos vendidos">+</button>
+                <button class="btn btn-secondary btn-sm" onclick="abrirModalRemito(${v.id})">Ver Remito</button>
             </td>
         `;
         tbody.appendChild(trPrincipal);
-
-        // Fila Desplegable del Acordeón (oculta por defecto)
-        const trAcordeon = document.createElement("tr");
-        trAcordeon.id = `acordeon-venta-${v.id}`;
-        trAcordeon.className = "sale-accordion-row";
-        trAcordeon.style.display = "none";
-
-        const cantItems = v.detalles ? v.detalles.length : 0;
-        let lineasHtml = "";
-
-        if (v.detalles && v.detalles.length > 0) {
-            v.detalles.forEach(d => {
-                lineasHtml += `
-                    <tr>
-                        <td><code>${d.productoCodigo}</code></td>
-                        <td>${d.descripcion || 'Producto'}</td>
-                        <td>${d.cantidad}</td>
-                        <td>$ ${d.precioUnitario.toFixed(2)}</td>
-                        <td><strong>$ ${d.subtotal.toFixed(2)}</strong></td>
-                    </tr>
-                `;
-            });
-        } else {
-            lineasHtml = `<tr><td colspan="5">No se detallaron artículos individuales.</td></tr>`;
-        }
-
-        trAcordeon.innerHTML = `
-            <td colspan="5" style="padding: 0 1.5rem 1rem 1.5rem;">
-                <div class="sale-accordion-box">
-                    <h4>PRODUCTOS VENDIDOS (${cantItems})</h4>
-                    <table class="table" style="background:#ffffff; border:1px solid var(--border-color);">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Producto</th>
-                                <th>Cantidad</th>
-                                <th>Precio Unit.</th>
-                                <th>Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${lineasHtml}
-                        </tbody>
-                    </table>
-                </div>
-            </td>
-        `;
-        tbody.appendChild(trAcordeon);
     });
 }
 
-function toggleDetalleVentaERP(ventaId) {
-    const filaAcordeon = document.getElementById(`acordeon-venta-${ventaId}`);
-    const boton = document.getElementById(`btn-expand-${ventaId}`);
+function abrirModalRemito(ventaId) {
+    const v = listaVentasGlobal.find(item => item.id === ventaId);
+    if (!v) return;
 
-    if (filaAcordeon.style.display === "none") {
-        filaAcordeon.style.display = "table-row";
-        boton.textContent = "-";
-        boton.classList.add("expanded");
+    // Número formateado tipo remito comercial (ej: 0001-00000023)
+    const numeroFormateado = "0001-" + String(v.id).padStart(8, "0");
+    const fechaFmt = v.fecha ? v.fecha.replace("T", " ").substring(0, 19) : "-";
+
+    document.getElementById("remito-numero").textContent = numeroFormateado;
+    document.getElementById("remito-fecha").textContent = fechaFmt;
+    document.getElementById("remito-vendedor").textContent = usuarioActual ? `${usuarioActual.nombre} ${usuarioActual.apellido}` : `Operador #${v.usuarioId}`;
+    document.getElementById("remito-total").textContent = `$ ${v.importeTotal.toFixed(2)}`;
+
+    const tbodyItems = document.getElementById("remito-tbody-items");
+    tbodyItems.innerHTML = "";
+
+    if (v.detalles && v.detalles.length > 0) {
+        v.detalles.forEach(d => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><code>${d.productoCodigo}</code></td>
+                <td>${d.descripcion || 'Artículo Natural'}</td>
+                <td class="text-center">${d.cantidad}</td>
+                <td class="text-right">$ ${d.precioUnitario.toFixed(2)}</td>
+                <td class="text-right"><strong>$ ${d.subtotal.toFixed(2)}</strong></td>
+            `;
+            tbodyItems.appendChild(tr);
+        });
     } else {
-        filaAcordeon.style.display = "none";
-        boton.textContent = "+";
-        boton.classList.remove("expanded");
+        tbodyItems.innerHTML = `<tr><td colspan="5" class="text-center">Venta sin desglose de artículos.</td></tr>`;
     }
+
+    document.getElementById("modal-remito").style.display = "flex";
+}
+
+function cerrarModalRemito() {
+    document.getElementById("modal-remito").style.display = "none";
+}
+
+function imprimirRemito() {
+    window.print();
 }
 
 function filtrarHistorialVentas() {
@@ -672,4 +651,268 @@ function limpiarFiltroRecaudacion() {
     document.getElementById("fecha-desde").value = "";
     document.getElementById("fecha-hasta").value = "";
     consultarRecaudacion();
+}
+
+// ============================================================
+// 7. CLIENTES Y PROMOCIONES
+// ============================================================
+async function cargarClientes() {
+    try {
+        const res = await fetch("/api/clientes");
+        const clientes = await res.json();
+        renderizarTablaClientes(clientes);
+    } catch (err) {
+        console.error("Error al cargar clientes:", err);
+    }
+}
+
+function renderizarTablaClientes(clientes) {
+    const tbody = document.getElementById("tbody-clientes");
+    tbody.innerHTML = "";
+
+    if (!clientes || clientes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center">No hay clientes registrados aún.</td></tr>`;
+        return;
+    }
+
+    clientes.forEach(c => {
+        const tr = document.createElement("tr");
+        const fechaFmt = c.fechaRegistro ? c.fechaRegistro.replace("T", " ").substring(0, 10) : "-";
+        tr.innerHTML = `
+            <td><strong>${c.nombre} ${c.apellido}</strong></td>
+            <td>${c.telefono}</td>
+            <td>${c.email || '-'}</td>
+            <td>
+                <span class="badge ${c.recibePromociones ? 'badge-success' : 'badge-warning'}">
+                    ${c.recibePromociones ? 'Adherido a Promos' : 'No recibe'}
+                </span>
+            </td>
+            <td>${fechaFmt}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function abrirModalCliente() {
+    document.getElementById("form-cliente").reset();
+    document.getElementById("cli-promociones").checked = true;
+    document.getElementById("modal-cliente").style.display = "flex";
+}
+
+function cerrarModalCliente() {
+    document.getElementById("modal-cliente").style.display = "none";
+}
+
+async function guardarCliente(e) {
+    e.preventDefault();
+    const payload = {
+        nombre: document.getElementById("cli-nombre").value.trim(),
+        apellido: document.getElementById("cli-apellido").value.trim(),
+        telefono: document.getElementById("cli-telefono").value.trim(),
+        email: document.getElementById("cli-email").value.trim(),
+        recibePromociones: document.getElementById("cli-promociones").checked ? "true" : "false"
+    };
+
+    try {
+        const res = await fetch("/api/clientes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.exito) {
+            alert("Cliente registrado con éxito para campañas y promociones.");
+            cerrarModalCliente();
+            cargarClientes();
+        } else {
+            alert("No se pudo registrar el cliente.");
+        }
+    } catch (err) {
+        alert("Error de conexión al registrar cliente.");
+    }
+}
+
+// ============================================================
+// 8. PROVEEDORES
+// ============================================================
+async function cargarProveedores() {
+    try {
+        const res = await fetch("/api/proveedores");
+        const proveedores = await res.json();
+        renderizarTablaProveedores(proveedores);
+    } catch (err) {
+        console.error("Error al cargar proveedores:", err);
+    }
+}
+
+function renderizarTablaProveedores(proveedores) {
+    const tbody = document.getElementById("tbody-proveedores");
+    tbody.innerHTML = "";
+
+    if (!proveedores || proveedores.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center">No hay proveedores registrados.</td></tr>`;
+        return;
+    }
+
+    proveedores.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><strong>${p.razonSocial}</strong></td>
+            <td><code>${p.cuit}</code></td>
+            <td><span class="badge">${p.rubro}</span></td>
+            <td>${p.telefono}</td>
+            <td>${p.email || '-'}</td>
+            <td><span class="badge badge-success">Activo</span></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function abrirModalProveedor() {
+    document.getElementById("form-proveedor").reset();
+    document.getElementById("modal-proveedor").style.display = "flex";
+}
+
+function cerrarModalProveedor() {
+    document.getElementById("modal-proveedor").style.display = "none";
+}
+
+async function guardarProveedor(e) {
+    e.preventDefault();
+    const payload = {
+        razonSocial: document.getElementById("prov-razon").value.trim(),
+        cuit: document.getElementById("prov-cuit").value.trim(),
+        rubro: document.getElementById("prov-rubro").value.trim(),
+        telefono: document.getElementById("prov-telefono").value.trim(),
+        email: document.getElementById("prov-email").value.trim()
+    };
+
+    try {
+        const res = await fetch("/api/proveedores", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.exito) {
+            alert("Proveedor guardado con éxito.");
+            cerrarModalProveedor();
+            cargarProveedores();
+        } else {
+            alert("No se pudo guardar el proveedor.");
+        }
+    } catch (err) {
+        alert("Error de conexión al guardar proveedor.");
+    }
+}
+
+// ============================================================
+// 9. CAJA Y MOVIMIENTOS (EMPLEADO VS GERENTE / ADMIN)
+// ============================================================
+async function cargarCaja() {
+    const esGerente = usuarioActual && usuarioActual.perfil === "GERENTE";
+
+    // Configuración visual según perfil
+    if (esGerente) {
+        document.getElementById("caja-titulo-vista").textContent = "Caja General y Tesorería";
+        document.getElementById("caja-subtitulo-vista").textContent = "Control integral de ingresos por ventas, egresos por pagos de impuestos y proveedores, y saldo neto.";
+        document.getElementById("caja-acciones-admin").style.display = "block";
+        document.getElementById("caja-card-egresos").style.display = "flex";
+        document.getElementById("caja-label-saldo").textContent = "SALDO NETO EN CAJA";
+    } else {
+        document.getElementById("caja-titulo-vista").textContent = "Caja de Turno (Empleado)";
+        document.getElementById("caja-subtitulo-vista").textContent = "Control de ventas e ingresos en efectivo registrados en tu turno.";
+        document.getElementById("caja-acciones-admin").style.display = "none";
+        document.getElementById("caja-card-egresos").style.display = "none";
+        document.getElementById("caja-label-saldo").textContent = "TOTAL COBRADO EN TU TURNO";
+    }
+
+    // Consulta de totales y movimientos
+    const uParam = esGerente ? "" : `?usuarioId=${usuarioActual.id}`;
+
+    try {
+        // 1. Totales
+        const resTotales = await fetch(`/api/caja/totales${uParam}`);
+        const totales = await resTotales.json();
+
+        document.getElementById("caja-metric-ingresos").textContent = `$ ${(totales.ingresos || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+        document.getElementById("caja-metric-egresos").textContent = `$ ${(totales.egresos || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+        document.getElementById("caja-metric-saldo").textContent = `$ ${(totales.saldo || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
+
+        // 2. Movimientos
+        const resMovs = await fetch(`/api/caja/movimientos${uParam}`);
+        const movs = await resMovs.json();
+        renderizarTablaCaja(movs);
+
+    } catch (err) {
+        console.error("Error al cargar datos de caja:", err);
+    }
+}
+
+function renderizarTablaCaja(movs) {
+    const tbody = document.getElementById("tbody-caja-movimientos");
+    tbody.innerHTML = "";
+
+    if (!movs || movs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center">No se registran movimientos en la caja.</td></tr>`;
+        return;
+    }
+
+    movs.forEach(m => {
+        const esIngreso = m.tipo.startsWith("INGRESO");
+        const fechaFmt = m.fecha ? m.fecha.replace("T", " ").substring(0, 19) : "-";
+        const tr = document.createElement("tr");
+
+        let tipoLabel = m.tipo;
+        if (m.tipo === "INGRESO_VENTA") tipoLabel = "Ingreso por Venta";
+        if (m.tipo === "EGRESO_PROVEEDOR") tipoLabel = "Pago a Proveedor";
+        if (m.tipo === "EGRESO_IMPUESTOS") tipoLabel = "Pago de Impuestos/Servicios";
+        if (m.tipo === "EGRESO_GASTOS") tipoLabel = "Gastos Operativos";
+
+        tr.innerHTML = `
+            <td>${fechaFmt}</td>
+            <td><span class="badge ${esIngreso ? 'badge-success' : 'badge-danger'}">${tipoLabel}</span></td>
+            <td>${m.concepto}</td>
+            <td class="text-right"><strong class="${esIngreso ? 'text-primary' : 'text-danger'}">${esIngreso ? '+' : '-'} $ ${m.monto.toFixed(2)}</strong></td>
+            <td>Usuario #${m.usuarioId}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function abrirModalEgresoCaja() {
+    document.getElementById("form-egreso-caja").reset();
+    document.getElementById("modal-egreso-caja").style.display = "flex";
+}
+
+function cerrarModalEgresoCaja() {
+    document.getElementById("modal-egreso-caja").style.display = "none";
+}
+
+async function guardarEgresoCaja(e) {
+    e.preventDefault();
+    const payload = {
+        tipo: document.getElementById("egreso-tipo").value,
+        concepto: document.getElementById("egreso-concepto").value.trim(),
+        monto: parseFloat(document.getElementById("egreso-monto").value),
+        usuarioId: String(usuarioActual.id)
+    };
+
+    try {
+        const res = await fetch("/api/caja/egreso", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.exito) {
+            alert("Egreso de caja registrado correctamente.");
+            cerrarModalEgresoCaja();
+            cargarCaja();
+        } else {
+            alert("No se pudo registrar el egreso.");
+        }
+    } catch (err) {
+        alert("Error de conexión al registrar egreso.");
+    }
 }
