@@ -1,0 +1,15 @@
+# Compilación de Java y Maven
+target/
+*.class
+
+# Entornos de desarrollo
+.vscode/
+.idea/
+*.iml
+.settings/
+.project
+.classpath
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vida Natural — Sistema de Gestión Comercial</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- PANTALLA 1: LOGIN -->
+    <div id="vista-login" class="login-wrapper">
+        <div class="login-card">
+            <div class="brand">
+                <h1>Vida Natural</h1>
+                <p>Dietética Comercial — Sistema de Gestión</p>
+            </div>
+
+            <div id="login-error" class="alert alert-error" style="display:none;"></div>
+
+            <form id="form-login" onsubmit="iniciarSesion(event)">
+                <div class="form-group">
+                    <label for="usuario">Nombre de Usuario</label>
+                    <input type="text" id="usuario" placeholder="Ej: admin01 o gerente" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="contrasena">Contraseña</label>
+                    <input type="password" id="contrasena" placeholder="Contraseña de acceso" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Ingresar al Sistema</button>
+            </form>
+
+            <div class="login-demo-help">
+                <p><strong>Cuentas disponibles:</strong></p>
+                <p>Administrativo: <code>admin01</code> / <code>admin123</code></p>
+                <p>Gerente: <code>gerente</code> / <code>gerente123</code></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: PANEL PRINCIPAL -->
+    <div id="vista-principal" class="app-layout" style="display:none;">
+        
+        <!-- HEADER SUPERIOR COLOR BLANCO -->
+        <header class="app-header">
+            <div class="header-left">
+                <button id="btn-toggle-sidebar" class="btn-sidebar-toggle" onclick="toggleSidebar()">
+                    <span>Menú</span>
+                </button>
+                <div class="header-brand">
+                    <span class="header-brand-title">Vida Natural</span>
+                    <span class="header-brand-subtitle">Dietética Comercial</span>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <!-- Dropdown de Usuario -->
+                <div class="user-dropdown-wrapper">
+                    <button class="user-dropdown-btn" onclick="toggleUserMenu()">
+                        <span id="header-user-name" class="user-name">Usuario</span>
+                        <span id="header-user-badge" class="badge">Perfil</span>
+                        <span class="arrow-down">&#9662;</span>
+                    </button>
+                    <div id="user-dropdown-menu" class="user-dropdown-content" style="display:none;">
+                        <div class="dropdown-header">
+                            <strong id="dropdown-full-name">Nombre</strong>
+                            <small id="dropdown-role">Rol</small>
+                        </div>
+                        <hr class="dropdown-divider">
+                        <button class="dropdown-item text-danger" onclick="cerrarSesion()">Cerrar sesión</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="app-body">
+            <!-- BARRA LATERAL (ESTILO ERP PROFESIONAL) -->
+            <aside class="sidebar" id="app-sidebar">
+                <div class="sidebar-user-box">
+                    <span class="sub-label">USUARIO ACTIVO</span>
+                    <strong id="sidebar-user-display" class="user-display">Usuario</strong>
+                    <span id="sidebar-role-display" class="role-display">ADMINISTRATIVO</span>
+                </div>
+
+                <nav class="sidebar-nav">
+                    <!-- Acciones del menú -->
+                    <button class="nav-item active" id="nav-ventas" onclick="cambiarSeccion('ventas')">
+                        Registrar Venta
+                    </button>
+                    <button class="nav-item" id="nav-historial-ventas" onclick="cambiarSeccion('historial-ventas')">
+                        Historial de Ventas
+                    </button>
+                    <button class="nav-item" id="nav-productos" onclick="cambiarSeccion('productos')">
+                        Inventario de Productos
+                    </button>
+                    <button class="nav-item" id="nav-stock-bajo" onclick="cambiarSeccion('stock-bajo')">
+                        Control de Stock Mínimo
+                    </button>
+                    <button class="nav-item" id="nav-recaudacion" onclick="cambiarSeccion('recaudacion')">
+                        Reporte de Recaudación
+                    </button>
+                </nav>
+            </aside>
+
+            <!-- CONTENIDO PRINCIPAL -->
+            <main class="main-content">
+                
+                <!-- SECCIÓN 1: REGISTRAR VENTA (Administrativo) -->
+                <section id="seccion-ventas" class="seccion-view">
+                    <header class="section-heading">
+                        <h2>Registrar Venta</h2>
+                        <p>Incorporación de productos por código, validación de stock y cálculo de importes.</p>
+                    </header>
+
+                    <div class="grid-venta">
+                        <!-- Carga de Producto -->
+                        <div class="card">
+                            <h3 class="card-title">Agregar Producto a la Venta</h3>
+                            <div id="venta-alerta" class="alert" style="display:none;"></div>
+
+                            <div class="form-row">
+                                <div class="form-group flex-2">
+                                    <label for="venta-codigo">Código de Producto</label>
+                                    <input type="text" id="venta-codigo" placeholder="Ej: AV001" onkeydown="if(event.key==='Enter') buscarProductoParaVenta()">
+                                </div>
+                                <div class="form-group align-end">
+                                    <button type="button" class="btn btn-secondary" onclick="buscarProductoParaVenta()">Buscar Código</button>
+                                </div>
+                            </div>
+
+                            <!-- Ficha de Producto Encontrado -->
+                            <div id="venta-info-prod" class="info-box" style="display:none;">
+                                <h4 id="vip-desc">-</h4>
+                                <div class="info-grid">
+                                    <div><strong>Categoría:</strong> <span id="vip-cat">-</span></div>
+                                    <div><strong>Precio unitario:</strong> $<span id="vip-precio">0.00</span></div>
+                                    <div><strong>Stock disponible:</strong> <span id="vip-stock" class="badge">0</span></div>
+                                    <div><strong>Stock mínimo:</strong> <span id="vip-stock-min">0</span></div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="venta-cantidad">Cantidad Solicitada</label>
+                                    <input type="number" id="venta-cantidad" min="1" value="1">
+                                </div>
+                                <div class="form-group align-end">
+                                    <button type="button" class="btn btn-primary" onclick="agregarItemVenta()">Incorporar a la Venta</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Carrito / Detalle de la Venta actual -->
+                        <div class="card">
+                            <h3 class="card-title">Detalle de la Venta en Curso</h3>
+                            <div class="table-responsive">
+                                <table class="table" id="tabla-carrito">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Descripción</th>
+                                            <th>Precio Unit.</th>
+                                            <th>Cant.</th>
+                                            <th>Subtotal</th>
+                                            <th>Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-carrito">
+                                        <tr class="empty-row"><td colspan="6">No hay productos agregados a la venta.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="total-bar">
+                                <span class="total-label">Total a Cobrar:</span>
+                                <span class="total-monto" id="venta-total">$0.00</span>
+                            </div>
+
+                            <button type="button" class="btn btn-success btn-block btn-lg" onclick="confirmarVentaFinal()">
+                                Confirmar Venta y Descontar Stock
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN 2: HISTORIAL DE VENTAS (ESTILO ERP DE LA FOTO) -->
+                <section id="seccion-historial-ventas" class="seccion-view" style="display:none;">
+                    <div class="erp-section-header">
+                        <h2>HISTORIAL DE VENTAS</h2>
+                        <span class="erp-counter-badge" id="historial-ventas-contador">0 ventas</span>
+                    </div>
+
+                    <!-- Panel de Filtros -->
+                    <div class="card erp-filter-card">
+                        <div class="filter-header">
+                            <span class="filter-title">FILTROS DE BÚSQUEDA</span>
+                            <button class="btn-link" onclick="limpiarFiltrosHistorial()">Limpiar filtros</button>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group flex-2">
+                                <label for="historial-buscar-texto">Buscar (Producto o Código)</label>
+                                <input type="text" id="historial-buscar-texto" placeholder="Escriba para filtrar..." oninput="filtrarHistorialVentas()">
+                            </div>
+                            <div class="form-group">
+                                <label for="historial-desde">Desde</label>
+                                <input type="date" id="historial-desde" onchange="filtrarHistorialVentas()">
+                            </div>
+                            <div class="form-group">
+                                <label for="historial-hasta">Hasta</label>
+                                <input type="date" id="historial-hasta" onchange="filtrarHistorialVentas()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tarjetas de Métricas Resumen -->
+                    <div class="metrics-row">
+                        <div class="metric-card">
+                            <span class="metric-label">TOTAL VENDIDO</span>
+                            <span class="metric-value text-primary" id="metric-total-vendido">$ 0,00</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">VENTAS REALIZADAS</span>
+                            <span class="metric-value" id="metric-cantidad-ventas">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Ventas con Acordeón de Productos -->
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="table erp-table">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha y Hora</th>
+                                        <th>Usuario / Vendedor</th>
+                                        <th>Total</th>
+                                        <th>Estado</th>
+                                        <th class="text-center">Detalle</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-historial-erp">
+                                    <tr><td colspan="5">Cargando ventas...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN 3: INVENTARIO DE PRODUCTOS (Administrativo) -->
+                <section id="seccion-productos" class="seccion-view" style="display:none;">
+                    <header class="section-heading flex-between">
+                        <div>
+                            <h2>Inventario de Productos</h2>
+                            <p>Administración del catálogo, altas, modificaciones y bajas lógicas.</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="abrirModalProducto()">+ Registrar Nuevo Producto</button>
+                    </header>
+
+                    <div class="card">
+                        <div class="search-bar">
+                            <input type="text" id="filtro-productos" placeholder="Buscar producto por código o descripción..." oninput="filtrarProductos()">
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th>Categoría</th>
+                                        <th>Precio Unitario</th>
+                                        <th>Stock Actual</th>
+                                        <th>Stock Mínimo</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-productos">
+                                    <tr><td colspan="8">Cargando productos...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN 4: CONTROL DE STOCK MÍNIMO (Gerente y Administrativo) -->
+                <section id="seccion-stock-bajo" class="seccion-view" style="display:none;">
+                    <header class="section-heading">
+                        <h2>Control de Stock Mínimo</h2>
+                        <p>Productos cuyo stock actual es <strong>inferior o igual</strong> al límite mínimo de reposición establecido.</p>
+                    </header>
+
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th>Categoría</th>
+                                        <th>Stock Actual</th>
+                                        <th>Stock Mínimo</th>
+                                        <th>Diferencia con Mínimo</th>
+                                        <th>Situación</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-stock-bajo">
+                                    <tr><td colspan="7">Cargando reporte de stock...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN 5: REPORTE DE RECAUDACIÓN (Gerente) -->
+                <section id="seccion-recaudacion" class="seccion-view" style="display:none;">
+                    <header class="section-heading">
+                        <h2>Reporte de Recaudación</h2>
+                        <p>Total facturado en el sistema con filtro por período de fechas.</p>
+                    </header>
+
+                    <div class="card">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fecha-desde">Fecha Desde</label>
+                                <input type="date" id="fecha-desde">
+                            </div>
+                            <div class="form-group">
+                                <label for="fecha-hasta">Fecha Hasta</label>
+                                <input type="date" id="fecha-hasta">
+                            </div>
+                            <div class="form-group align-end">
+                                <button type="button" class="btn btn-primary" onclick="consultarRecaudacion()">Consultar Recaudación</button>
+                            </div>
+                            <div class="form-group align-end">
+                                <button type="button" class="btn btn-secondary" onclick="limpiarFiltroRecaudacion()">Ver Todo el Histórico</button>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <span class="kpi-title">TOTAL RECAUDADO EN EL PERÍODO</span>
+                            <span class="kpi-value" id="kpi-monto-recaudado">$ 0,00</span>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL: REGISTRAR / MODIFICAR PRODUCTO -->
+    <div id="modal-producto" class="modal-backdrop" style="display:none;">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h3 id="modal-titulo">Registrar Producto</h3>
+                <button class="btn-close" onclick="cerrarModalProducto()">&times;</button>
+            </header>
+            <form id="form-producto" onsubmit="guardarProducto(event)">
+                <div class="form-group">
+                    <label for="prod-codigo">Código Identificador</label>
+                    <input type="text" id="prod-codigo" required placeholder="Ej: AV002">
+                </div>
+                <div class="form-group">
+                    <label for="prod-desc">Descripción</label>
+                    <input type="text" id="prod-desc" required placeholder="Ej: Avena instantánea 500g">
+                </div>
+                <div class="form-group">
+                    <label for="prod-cat">Categoría</label>
+                    <select id="prod-cat" required>
+                        <option value="CEREAL">Cereal</option>
+                        <option value="SEMILLA">Semilla</option>
+                        <option value="FRUTO_SECO">Fruto Seco</option>
+                        <option value="LEGUMBRE">Legumbre</option>
+                        <option value="SUPLEMENTO">Suplemento</option>
+                        <option value="OTRO">Otro</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prod-precio">Precio Unitario ($)</label>
+                        <input type="number" id="prod-precio" step="0.01" min="0" required placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-stock-act">Stock Actual</label>
+                        <input type="number" id="prod-stock-act" min="0" required value="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="prod-stock-min">Stock Mínimo Permitido</label>
+                        <input type="number" id="prod-stock-min" min="0" required value="0">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalProducto()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Datos</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
