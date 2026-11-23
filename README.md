@@ -6,7 +6,7 @@ El sistema sustituye las planillas y registros manuales por una solución integr
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+##  Tecnologías Utilizadas
 
 - **Lenguaje Backend:** Java 17 / 21 (Java SE)
 - **Servidor Web:** `com.sun.net.httpserver` (Servidor HTTP nativo en Java, sin necesidad de contenedores Tomcat ni dependencias externas pesadas)
@@ -17,7 +17,7 @@ El sistema sustituye las planillas y registros manuales por una solución integr
 
 ---
 
-## 👥 Perfiles de Usuario y Requerimientos
+##  Perfiles de Usuario y Requerimientos
 
 El sistema implementa control de acceso basado en roles (RBAC) con dos perfiles diferenciados:
 
@@ -47,7 +47,7 @@ El sistema implementa control de acceso basado en roles (RBAC) con dos perfiles 
 
 ---
 
-## 📐 Modelo de Datos y Arquitectura
+##  Modelo de Datos y Arquitectura
 
 ### Modelo Entidad-Relación (MER)
 
@@ -109,7 +109,7 @@ erDiagram
 
 ---
 
-## 📁 Estructura del Proyecto
+##  Estructura del Proyecto
 
 ```text
 VidaNatural/
@@ -180,7 +180,7 @@ VidaNatural/
 
 ---
 
-## 🔑 Usuarios y Credenciales de Demostración
+##  Usuarios y Credenciales de Demostración
 
 | Rol | Nombre de Usuario | Contraseña | Capacidades Principales |
 | :--- | :--- | :--- | :--- |
@@ -189,7 +189,7 @@ VidaNatural/
 
 ---
 
-## 📄 Formato para Informe Académico
+##  Formato para Informe Académico
 
 En caso de requerir la entrega del informe final solicitado por la cátedra:
 
