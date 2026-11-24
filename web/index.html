@@ -125,23 +125,11 @@
                     <button class="nav-item active" id="nav-ventas" onclick="cambiarSeccion('ventas')">
                         Registrar Venta
                     </button>
-                    <button class="nav-item" id="nav-historial-ventas" onclick="cambiarSeccion('historial-ventas')">
-                        Historial de Ventas
-                    </button>
                     <button class="nav-item" id="nav-productos" onclick="cambiarSeccion('productos')">
                         Inventario de Productos
                     </button>
                     <button class="nav-item" id="nav-stock-bajo" onclick="cambiarSeccion('stock-bajo')">
                         Control de Stock Mínimo
-                    </button>
-                    <button class="nav-item" id="nav-clientes" onclick="cambiarSeccion('clientes')">
-                        Clientes y Promociones
-                    </button>
-                    <button class="nav-item" id="nav-proveedores" onclick="cambiarSeccion('proveedores')">
-                        Proveedores
-                    </button>
-                    <button class="nav-item" id="nav-caja" onclick="cambiarSeccion('caja')">
-                        Caja Diaria y Movimientos
                     </button>
                     <button class="nav-item" id="nav-recaudacion" onclick="cambiarSeccion('recaudacion')">
                         Reporte de Recaudación
@@ -152,11 +140,10 @@
             <!-- CONTENIDO PRINCIPAL -->
             <main class="main-content">
                 
-                <!-- SECCIÓN 1: REGISTRAR VENTA -->
+                <!-- SECCIÓN 1: REGISTRAR VENTA (ADMINISTRATIVO) -->
                 <section id="seccion-ventas" class="seccion-view">
                     <header class="section-heading">
                         <h2>Registrar Venta</h2>
-                        <p>Ingrese el código o nombre del producto y la cantidad solicitada para validar stock e incorporar a la factura.</p>
                     </header>
 
                     <div class="grid-venta">
@@ -228,78 +215,18 @@
                     </div>
                 </section>
 
-                <!-- SECCIÓN 2: HISTORIAL DE VENTAS -->
-                <section id="seccion-historial-ventas" class="seccion-view" style="display:none;">
-                    <div class="erp-section-header">
-                        <h2>HISTORIAL DE VENTAS</h2>
-                        <span class="erp-counter-badge" id="historial-ventas-contador">0 ventas</span>
-                    </div>
-
-                    <div class="card erp-filter-card">
-                        <div class="filter-header">
-                            <span class="filter-title">FILTROS DE BÚSQUEDA</span>
-                            <button class="btn-link" onclick="limpiarFiltrosHistorial()">Limpiar filtros</button>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group flex-2">
-                                <label for="historial-buscar-texto">Buscar (Producto o Código)</label>
-                                <input type="text" id="historial-buscar-texto" placeholder="Escriba para filtrar..." oninput="filtrarHistorialVentas()">
-                            </div>
-                            <div class="form-group">
-                                <label for="historial-desde">Desde</label>
-                                <input type="date" id="historial-desde" onchange="filtrarHistorialVentas()">
-                            </div>
-                            <div class="form-group">
-                                <label for="historial-hasta">Hasta</label>
-                                <input type="date" id="historial-hasta" onchange="filtrarHistorialVentas()">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="metrics-row">
-                        <div class="metric-card">
-                            <span class="metric-label">TOTAL VENDIDO</span>
-                            <span class="metric-value text-primary" id="metric-total-vendido">$ 0,00</span>
-                        </div>
-                        <div class="metric-card">
-                            <span class="metric-label">VENTAS REALIZADAS</span>
-                            <span class="metric-value" id="metric-cantidad-ventas">0</span>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="table-responsive">
-                            <table class="table erp-table">
-                                <thead>
-                                    <tr>
-                                        <th>Fecha y Hora</th>
-                                        <th>Usuario / Vendedor</th>
-                                        <th>Total</th>
-                                        <th>Estado</th>
-                                        <th class="text-center">Detalle</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tbody-historial-erp">
-                                    <tr><td colspan="5">Cargando ventas...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- SECCIÓN 3: INVENTARIO DE PRODUCTOS -->
+                <!-- SECCIÓN 2: INVENTARIO DE PRODUCTOS (ADMINISTRATIVO) -->
                 <section id="seccion-productos" class="seccion-view" style="display:none;">
                     <header class="section-heading flex-between">
                         <div>
                             <h2>Inventario de Productos</h2>
-                            <p>Administración del catálogo, altas, modificaciones, bajas lógicas y reactivación.</p>
                         </div>
                         <button class="btn btn-primary" onclick="abrirModalProducto()">+ Registrar Nuevo Producto</button>
                     </header>
 
                     <div class="card">
                         <div class="search-bar">
-                            <input type="text" id="filtro-productos" placeholder="Buscar producto por código o descripción..." oninput="filtrarProductos()">
+                            <input type="text" id="filtro-productos" placeholder="Buscar producto por código o descripción" oninput="filtrarProductos()">
                         </div>
 
                         <div class="table-responsive">
@@ -324,11 +251,10 @@
                     </div>
                 </section>
 
-                <!-- SECCIÓN 4: CONTROL DE STOCK MÍNIMO -->
+                <!-- SECCIÓN 3: CONTROL DE STOCK MÍNIMO (GERENTE) -->
                 <section id="seccion-stock-bajo" class="seccion-view" style="display:none;">
                     <header class="section-heading">
                         <h2>Control de Stock Mínimo</h2>
-                        <p>Productos cuyo stock actual es <strong>inferior o igual</strong> al límite mínimo de reposición establecido.</p>
                     </header>
 
                     <div class="card">
@@ -353,11 +279,10 @@
                     </div>
                 </section>
 
-                <!-- SECCIÓN 5: REPORTE DE RECAUDACIÓN -->
+                <!-- SECCIÓN 4: REPORTE DE RECAUDACIÓN (GERENTE) -->
                 <section id="seccion-recaudacion" class="seccion-view" style="display:none;">
                     <header class="section-heading">
                         <h2>Reporte de Recaudación</h2>
-                        <p>Total facturado en el sistema con filtro por período de fechas.</p>
                     </header>
 
                     <div class="card">
@@ -385,236 +310,7 @@
                     </div>
                 </section>
 
-                <!-- SECCIÓN 6: CLIENTES Y PROMOCIONES -->
-                <section id="seccion-clientes" class="seccion-view" style="display:none;">
-                    <header class="section-heading flex-between">
-                        <div>
-                            <h2>Clientes y Promociones</h2>
-                            <p>Registro de clientes para envío de promociones, novedades y descuentos.</p>
-                        </div>
-                        <button class="btn btn-primary" onclick="abrirModalCliente()">+ Registrar Cliente</button>
-                    </header>
-
-                    <div class="card">
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Nombre y Apellido</th>
-                                        <th>Teléfono / WhatsApp</th>
-                                        <th>Email</th>
-                                        <th>Promociones</th>
-                                        <th>Fecha Registro</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tbody-clientes">
-                                    <tr><td colspan="5">Cargando clientes...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- SECCIÓN 7: PROVEEDORES -->
-                <section id="seccion-proveedores" class="seccion-view" style="display:none;">
-                    <header class="section-heading flex-between">
-                        <div>
-                            <h2>Proveedores</h2>
-                            <p>Gestión de distribuidores de cereales, semillas, frutos secos y suplementos.</p>
-                        </div>
-                        <button class="btn btn-primary" onclick="abrirModalProveedor()">+ Nuevo Proveedor</button>
-                    </header>
-
-                    <div class="card">
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Razón Social</th>
-                                        <th>CUIT</th>
-                                        <th>Rubro de Mercadería</th>
-                                        <th>Teléfono</th>
-                                        <th>Email</th>
-                                        <th>Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tbody-proveedores">
-                                    <tr><td colspan="6">Cargando proveedores...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- SECCIÓN 8: CAJA DIARIA Y MOVIMIENTOS -->
-                <section id="seccion-caja" class="seccion-view" style="display:none;">
-                    <header class="section-heading flex-between">
-                        <div>
-                            <h2 id="caja-titulo-vista">Caja Diaria y Movimientos</h2>
-                            <p id="caja-subtitulo-vista">Arqueo diario de caja, ingresos por ventas y cobros a clientes, egresos y cierre de jornada.</p>
-                        </div>
-                        <div id="caja-acciones-admin" style="display:none; gap: 0.6rem; flex-wrap: wrap;">
-                            <button class="btn btn-success" onclick="abrirModalIngresoCaja()">+ Registrar Ingreso / Cobro</button>
-                            <button class="btn btn-outline-danger" onclick="abrirModalEgresoCaja()">- Registrar Egreso / Pago</button>
-                            <button class="btn btn-primary" id="btn-cierre-caja-diario" onclick="realizarCierreCajaDiario()">Cerrar Caja del Día</button>
-                        </div>
-                    </header>
-
-                    <!-- Estado de Jornada / Cierre Diario -->
-                    <div class="card" style="margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                        <div>
-                            <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600;">Jornada Comercial (<span id="caja-fecha-hoy">-</span>)</span>
-                            <div style="margin-top: 0.25rem; display: flex; align-items: center; gap: 0.75rem;">
-                                <span id="caja-estado-badge" class="badge badge-success">CAJA ABIERTA</span>
-                                <span id="caja-ultimo-cierre-info" style="font-size: 0.88rem; color: var(--text-secondary);">Sin cierre registrado en el día de hoy.</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="metrics-row">
-                        <div class="metric-card">
-                            <span class="metric-label">INGRESOS DEL DÍA (VENTAS Y COBROS)</span>
-                            <span class="metric-value text-primary" id="caja-metric-ingresos">$ 0,00</span>
-                        </div>
-                        <div class="metric-card" id="caja-card-egresos">
-                            <span class="metric-label">EGRESOS DEL DÍA (PAGOS Y GASTOS)</span>
-                            <span class="metric-value text-danger" id="caja-metric-egresos">$ 0,00</span>
-                        </div>
-                        <div class="metric-card">
-                            <span class="metric-label" id="caja-label-saldo">SALDO DISPONIBLE EN CAJA</span>
-                            <span class="metric-value text-primary" id="caja-metric-saldo">$ 0,00</span>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="flex-between" style="margin-bottom: 1rem;">
-                            <h3 class="card-title" style="margin: 0;">Movimientos de Caja</h3>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <label for="caja-filtro-fecha" style="margin: 0; font-size: 0.85rem;">Fecha:</label>
-                                <input type="date" id="caja-filtro-fecha" onchange="cargarCaja()" style="padding: 0.35rem 0.6rem; font-size: 0.85rem;">
-                            </div>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Fecha y Hora</th>
-                                        <th>Tipo de Movimiento</th>
-                                        <th>Concepto / Cliente</th>
-                                        <th class="text-right">Monto</th>
-                                        <th>Usuario</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tbody-caja-movimientos">
-                                    <tr><td colspan="5">Cargando caja...</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </section>
-
             </main>
-        </div>
-    </div>
-
-    <!-- MODAL: FORMATO REMITO COMERCIAL -->
-    <div id="modal-remito" class="modal-backdrop" style="display:none;">
-        <div class="modal-card modal-remito-card">
-            <header class="modal-header">
-                <h3>Comprobante de Venta</h3>
-                <button class="btn-close" onclick="cerrarModalRemito()">&times;</button>
-            </header>
-
-            <div class="remito-scroll">
-                <div class="remito-paper" id="remito-printable">
-                    <div class="remito-original">ORIGINAL</div>
-
-                    <!-- Cabecera -->
-                    <div class="remito-cab">
-                        <div class="remito-cab-izq">
-                            <div class="remito-empresa-nombre">VIDA NATURAL</div>
-                            <div class="remito-empresa-rubro">Dietética y Almacén Natural</div>
-                            <div class="remito-empresa-dir">Venta Minorista de Alimentos Saludables</div>
-                            <div class="remito-empresa-dir">Domicilio: Av. Alem 1234 - Bahía Blanca (B8000)</div>
-                            <div class="remito-empresa-dir">Tel.: (0291) 400-0000</div>
-                            <div class="remito-empresa-dir"><strong>IVA Responsable Monotributo</strong></div>
-                        </div>
-
-                        <div class="remito-cab-centro">
-                            <div class="remito-box-letra">
-                                <span class="letra-r">R</span>
-                                <span class="letra-sub">Documento<br>no fiscal</span>
-                            </div>
-                        </div>
-
-                        <div class="remito-cab-der">
-                            <div class="remito-doc-titulo">REMITO</div>
-                            <div class="remito-doc-numero">N° <span id="remito-numero">0001-00000000</span></div>
-                            <div class="remito-dato"><strong>Fecha:</strong> <span id="remito-fecha">-</span></div>
-                            <div class="remito-dato"><strong>Hora:</strong> <span id="remito-hora">-</span></div>
-                            <div class="remito-dato"><strong>C.U.I.T.:</strong> 20-00000000-0</div>
-                            <div class="remito-dato"><strong>Ing. Brutos:</strong> 000-000000-0</div>
-                            <div class="remito-dato"><strong>Inicio de Act.:</strong> 01/01/2020</div>
-                        </div>
-                    </div>
-
-                    <!-- Datos del cliente -->
-                    <div class="remito-cliente">
-                        <div class="remito-cliente-fila">
-                            <div><strong>Señor/es:</strong> Consumidor Final (Venta Mostrador)</div>
-                            <div><strong>Atendido por:</strong> <span id="remito-vendedor">-</span></div>
-                        </div>
-                        <div class="remito-cliente-fila">
-                            <div><strong>Domicilio:</strong> -</div>
-                            <div><strong>C.U.I.T./D.N.I.:</strong> -</div>
-                        </div>
-                        <div class="remito-cliente-fila">
-                            <div><strong>I.V.A.:</strong> Consumidor Final</div>
-                            <div><strong>Condición de venta:</strong> Contado / Efectivo</div>
-                        </div>
-                    </div>
-
-                    <!-- Detalle de artículos -->
-                    <table class="remito-items-table">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Descripción del artículo</th>
-                                <th>Cant.</th>
-                                <th>Precio unit.</th>
-                                <th>Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody id="remito-tbody-items"></tbody>
-                    </table>
-
-                    <!-- Pie -->
-                    <div class="remito-pie">
-                        <div class="remito-pie-izq">
-                            <div class="remito-obs-titulo">Observaciones:</div>
-                            <div class="remito-obs-linea"></div>
-                            <div class="remito-obs-linea"></div>
-                            <div class="remito-firmas">
-                                <div class="firma-linea">Firma</div>
-                                <div class="firma-linea">Aclaración</div>
-                                <div class="firma-linea">D.N.I.</div>
-                            </div>
-                            <div class="remito-recibi">Recibí conforme</div>
-                        </div>
-                        <div class="remito-totales-box">
-                            <span class="remito-total-txt">TOTAL</span>
-                            <strong id="remito-total" class="remito-total-val">$ 0,00</strong>
-                        </div>
-                    </div>
-
-                    <div class="remito-leyenda">Documento no válido como factura</div>
-                </div>
-            </div>
-
-            <div class="modal-footer flex-between">
-                <button type="button" class="btn btn-secondary" onclick="cerrarModalRemito()">Cerrar</button>
-                <button type="button" class="btn btn-primary" onclick="imprimirRemito()">Imprimir Remito</button>
-            </div>
         </div>
     </div>
 
@@ -662,189 +358,6 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="cerrarModalProducto()">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Guardar Datos</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: REPONER STOCK DE PRODUCTO -->
-    <div id="modal-reponer-stock" class="modal-backdrop" style="display:none;">
-        <div class="modal-card">
-            <header class="modal-header">
-                <h3>Reponer Stock de Producto</h3>
-                <button class="btn-close" onclick="cerrarModalReponerStock()">&times;</button>
-            </header>
-            <form id="form-reponer-stock" onsubmit="guardarReposicionStock(event)">
-                <div class="info-box" style="margin-bottom: 1rem;">
-                    <h4 id="rep-producto-titulo">-</h4>
-                    <p style="font-size: 0.85rem; margin: 0;">Stock actual en depósito: <strong id="rep-stock-actual">0</strong> u.</p>
-                </div>
-
-                <div class="form-group">
-                    <label for="rep-proveedor">Proveedor (Opcional)</label>
-                    <select id="rep-proveedor">
-                        <option value="">-- Sin especificar / Compra directa --</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="rep-cantidad">Cantidad a Ingresar (+ unidades)</label>
-                    <input type="number" id="rep-cantidad" min="1" step="1" required placeholder="Ej: 20">
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="cerrarModalReponerStock()">Cancelar</button>
-                    <button type="submit" class="btn btn-success">Sumar al Stock</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: REGISTRAR CLIENTE -->
-    <div id="modal-cliente" class="modal-backdrop" style="display:none;">
-        <div class="modal-card">
-            <header class="modal-header">
-                <h3>Registrar Nuevo Cliente</h3>
-                <button class="btn-close" onclick="cerrarModalCliente()">&times;</button>
-            </header>
-            <form id="form-cliente" onsubmit="guardarCliente(event)">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="cli-nombre">Nombre</label>
-                        <input type="text" id="cli-nombre" required placeholder="Ej: Carolina">
-                    </div>
-                    <div class="form-group">
-                        <label for="cli-apellido">Apellido</label>
-                        <input type="text" id="cli-apellido" required placeholder="Ej: Rossi">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="cli-telefono">Teléfono / WhatsApp (solo números)</label>
-                    <input type="tel" id="cli-telefono" inputmode="numeric" pattern="[0-9]{7,15}" maxlength="15" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required placeholder="Ej: 2915544332">
-                </div>
-                <div class="form-group">
-                    <label for="cli-email">Email</label>
-                    <input type="email" id="cli-email" placeholder="correo@gmail.com">
-                </div>
-                <div class="form-group" style="flex-direction:row; align-items:center; gap:0.5rem; margin-top:0.5rem;">
-                    <input type="checkbox" id="cli-promociones" checked style="width:auto;">
-                    <label for="cli-promociones" style="margin-bottom:0; cursor:pointer;">Acepta recibir promociones y novedades semanales</label>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="cerrarModalCliente()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Cliente</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: REGISTRAR PROVEEDOR -->
-    <div id="modal-proveedor" class="modal-backdrop" style="display:none;">
-        <div class="modal-card">
-            <header class="modal-header">
-                <h3>Nuevo Proveedor</h3>
-                <button class="btn-close" onclick="cerrarModalProveedor()">&times;</button>
-            </header>
-            <form id="form-proveedor" onsubmit="guardarProveedor(event)">
-                <div class="form-group">
-                    <label for="prov-razon">Razón Social / Distribuidora</label>
-                    <input type="text" id="prov-razon" required placeholder="Ej: Distribuidora Granos & Cía">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="prov-cuit">CUIT (11 dígitos sin guiones)</label>
-                        <input type="text" id="prov-cuit" inputmode="numeric" pattern="[0-9]{11}" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required placeholder="Ej: 30123456789">
-                    </div>
-                    <div class="form-group">
-                        <label for="prov-rubro">Rubro Principal</label>
-                        <input type="text" id="prov-rubro" required placeholder="Ej: Frutos secos y legumbres">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="prov-telefono">Teléfono (solo números)</label>
-                        <input type="tel" id="prov-telefono" inputmode="numeric" pattern="[0-9]{7,15}" maxlength="15" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required placeholder="Ej: 2914455667">
-                    </div>
-                    <div class="form-group">
-                        <label for="prov-email">Email</label>
-                        <input type="email" id="prov-email" required placeholder="ventas@gmail.com">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="cerrarModalProveedor()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Proveedor</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: REGISTRAR INGRESO / COBRO A CLIENTE EN CAJA -->
-    <div id="modal-ingreso-caja" class="modal-backdrop" style="display:none;">
-        <div class="modal-card">
-            <header class="modal-header">
-                <h3>Registrar Ingreso / Cobro en Caja</h3>
-                <button class="btn-close" onclick="cerrarModalIngresoCaja()">&times;</button>
-            </header>
-            <form id="form-ingreso-caja" onsubmit="guardarIngresoCaja(event)">
-                <div class="form-group">
-                    <label for="ingreso-tipo">Tipo de Ingreso</label>
-                    <select id="ingreso-tipo" required>
-                        <option value="INGRESO_COBRO_CLIENTE">Cobro / Pago de Cliente</option>
-                        <option value="INGRESO_APORTE_CAJA">Apertura / Refuerzo de Cambio en Caja</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="ingreso-cliente">Cliente (opcional — seleccionar si corresponde)</label>
-                    <select id="ingreso-cliente" onchange="autocompletarConceptoCliente()">
-                        <option value="">-- Sin cliente específico / Mostrador --</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="ingreso-concepto">Concepto / Detalle del Ingreso</label>
-                    <input type="text" id="ingreso-concepto" required placeholder="Ej: Cobro en efectivo cliente Carolina Rossi">
-                </div>
-                <div class="form-group">
-                    <label for="ingreso-monto">Monto Recibido ($)</label>
-                    <input type="number" id="ingreso-monto" step="0.01" min="0.01" required placeholder="0.00">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="cerrarModalIngresoCaja()">Cancelar</button>
-                    <button type="submit" class="btn btn-success">Registrar Ingreso</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: REGISTRAR EGRESO DE CAJA -->
-    <div id="modal-egreso-caja" class="modal-backdrop" style="display:none;">
-        <div class="modal-card">
-            <header class="modal-header">
-                <h3>Registrar Egreso de Caja</h3>
-                <button class="btn-close" onclick="cerrarModalEgresoCaja()">&times;</button>
-            </header>
-            <form id="form-egreso-caja" onsubmit="guardarEgresoCaja(event)">
-                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 0.65rem 0.9rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.88rem;">
-                    <strong>Saldo disponible actual en caja:</strong> <span id="egreso-saldo-disponible">$ 0,00</span>
-                </div>
-                <div class="form-group">
-                    <label for="egreso-tipo">Tipo de Egreso</label>
-                    <select id="egreso-tipo" required>
-                        <option value="EGRESO_PROVEEDOR">Pago a Proveedores</option>
-                        <option value="EGRESO_IMPUESTOS">Pago de Impuestos y Servicios (Luz, Alquiler, AFIP)</option>
-                        <option value="EGRESO_GASTOS">Gastos Operativos / Insumos de Tienda</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="egreso-concepto">Concepto / Detalle del Comprobante</label>
-                    <input type="text" id="egreso-concepto" required placeholder="Ej: Pago factura Molinos del Sur N° 458">
-                </div>
-                <div class="form-group">
-                    <label for="egreso-monto">Monto del Egreso ($)</label>
-                    <input type="number" id="egreso-monto" step="0.01" min="0.01" required placeholder="0.00">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="cerrarModalEgresoCaja()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Registrar Salida de Dinero</button>
                 </div>
             </form>
         </div>

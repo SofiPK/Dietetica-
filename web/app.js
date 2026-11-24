@@ -1,17 +1,13 @@
 /**
-- DIETÉTICA VIDA NATURAL — LÓGICA FRONTEND
-- Estilo ERP Comercial (Sin Emojis, Diseño Limpio)
+ * DIETÉTICA VIDA NATURAL — LÓGICA FRONTEND
+ * Estilo ERP Comercial (Sin Emojis, Diseño Limpio)
  */
 
 let usuarioActual = null;
 let carritoActual = [];
 let productoSeleccionadoParaVenta = null;
 let listaProductosGlobal = [];
-let listaVentasGlobal = [];
-let listaClientesGlobal = [];
 let editandoProductoCodigo = null;
-let reponiendoProductoCodigo = null;
-let saldoActualCaja = 0;
 
 // Interceptor global de fetch para enviar el perfil en cada petición API
 const fetchOriginal = window.fetch;
@@ -115,14 +111,12 @@ function mostrarPanelPrincipal() {
 
     const esAdmin = usuarioActual.perfil === "ADMINISTRATIVO";
 
+    // Administrativo: Registrar Venta e Inventario de Productos
+    // Gerente: Control de Stock Mínimo y Reporte de Recaudación
     document.getElementById("nav-ventas").style.display = esAdmin ? "block" : "none";
-    document.getElementById("nav-historial-ventas").style.display = esAdmin ? "block" : "none";
     document.getElementById("nav-productos").style.display = esAdmin ? "block" : "none";
-    document.getElementById("nav-stock-bajo").style.display = "block";
-    document.getElementById("nav-clientes").style.display = esAdmin ? "block" : "none";
-    document.getElementById("nav-proveedores").style.display = esAdmin ? "block" : "none";
-    document.getElementById("nav-caja").style.display = "block";
-    document.getElementById("nav-recaudacion").style.display = "block";
+    document.getElementById("nav-stock-bajo").style.display = esAdmin ? "none" : "block";
+    document.getElementById("nav-recaudacion").style.display = esAdmin ? "none" : "block";
 
     if (esAdmin) {
         cambiarSeccion("ventas");
@@ -135,10 +129,13 @@ function mostrarPanelPrincipal() {
 // NAVEGACIÓN ENTRE SECCIONES
 // ============================================================
 function cambiarSeccion(seccion) {
-    const esGerente = usuarioActual && usuarioActual.perfil === "GERENTE";
-    const seccionesPermitidasGerente = ["stock-bajo", "recaudacion", "caja"];
+    const esAdmin = usuarioActual && usuarioActual.perfil === "ADMINISTRATIVO";
+    const seccionesAdmin = ["ventas", "productos"];
+    const seccionesGerente = ["stock-bajo", "recaudacion"];
 
-    if (esGerente && !seccionesPermitidasGerente.includes(seccion)) {
+    if (esAdmin && !seccionesAdmin.includes(seccion)) {
+        seccion = "ventas";
+    } else if (!esAdmin && !seccionesGerente.includes(seccion)) {
         seccion = "stock-bajo";
     }
 
@@ -153,24 +150,7 @@ function cambiarSeccion(seccion) {
     if (seccion === "ventas") cargarDatalistProductosVenta();
     if (seccion === "productos") cargarProductos();
     if (seccion === "stock-bajo") cargarStockBajo();
-    if (seccion === "historial-ventas") cargarHistorialVentasERP();
     if (seccion === "recaudacion") consultarRecaudacion();
-    if (seccion === "clientes") cargarClientes();
-    if (seccion === "proveedores") cargarProveedores();
-    if (seccion === "caja") {
-        const hoyStr = obtenerFechaHoyLocal();
-        const inputFecha = document.getElementById("caja-filtro-fecha");
-        if (inputFecha && !inputFecha.value) inputFecha.value = hoyStr;
-        cargarCaja();
-    }
-}
-
-function obtenerFechaHoyLocal() {
-    const ahora = new Date();
-    const anio = ahora.getFullYear();
-    const mes = String(ahora.getMonth() + 1).padStart(2, "0");
-    const dia = String(ahora.getDate()).padStart(2, "0");
-    return `${anio}-${mes}-${dia}`;
 }
 
 // ============================================================
@@ -367,6 +347,8 @@ async function confirmarVentaFinal() {
         return;
     }
 
+    const totalVenta = carritoActual.reduce((sum, item) => sum + item.subtotal, 0);
+
     const payload = {
         usuarioId: usuarioActual.id,
         detalles: carritoActual.map(item => ({
@@ -385,7 +367,7 @@ async function confirmarVentaFinal() {
 
         const data = await res.json();
         if (res.ok && data.exito) {
-            alert("Venta registrada con éxito. Se descontaron las cantidades del stock y se asentó el ingreso en caja.");
+            alert(`Venta registrada con éxito por un total de $${totalVenta.toFixed(2)}. Se descontaron las cantidades del stock.`);
             carritoActual = [];
             renderizarCarrito();
             document.getElementById("venta-info-prod").style.display = "none";
@@ -407,145 +389,7 @@ function mostrarAlertaVenta(mensaje, tipo) {
 }
 
 // ============================================================
-// 3. HISTORIAL DE VENTAS Y REMITO (ADMINISTRATIVO)
-// ============================================================
-async function cargarHistorialVentasERP() {
-    try {
-        const res = await fetch("/api/ventas");
-        listaVentasGlobal = await res.json();
-        renderizarHistorialVentas(listaVentasGlobal);
-    } catch (err) {
-        console.error("Error al cargar ventas:", err);
-    }
-}
-
-function renderizarHistorialVentas(ventas) {
-    const tbody = document.getElementById("tbody-historial-erp");
-    tbody.innerHTML = "";
-
-    const totalVendido = ventas.reduce((sum, v) => sum + v.importeTotal, 0);
-    document.getElementById("historial-ventas-contador").textContent = `${ventas.length} ventas`;
-    document.getElementById("metric-total-vendido").textContent = `$ ${totalVendido.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
-    document.getElementById("metric-cantidad-ventas").textContent = ventas.length;
-
-    if (!ventas || ventas.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center" style="padding: 2rem; color: var(--text-secondary);">No hay registros de ventas que coincidan con la búsqueda.</td></tr>`;
-        return;
-    }
-
-    ventas.forEach(v => {
-        const fechaFmt = v.fecha ? v.fecha.replace("T", " ").substring(0, 19) : "-";
-        
-        const trPrincipal = document.createElement("tr");
-        trPrincipal.id = `fila-venta-${v.id}`;
-        trPrincipal.innerHTML = `
-            <td><strong>${fechaFmt}</strong></td>
-            <td>Usuario #${v.usuarioId}</td>
-            <td><strong>$ ${v.importeTotal.toFixed(2)}</strong></td>
-            <td><span class="badge badge-success">${v.estado}</span></td>
-            <td class="text-center">
-                <button class="btn btn-secondary btn-sm" onclick="abrirModalRemito(${v.id})">Ver Remito</button>
-            </td>
-        `;
-        tbody.appendChild(trPrincipal);
-    });
-}
-
-function abrirModalRemito(ventaId) {
-    const v = listaVentasGlobal.find(item => item.id === ventaId);
-    if (!v) return;
-
-    const fmtMoneda = n => `$ ${Number(n).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-    const numeroFormateado = "0001-" + String(v.id).padStart(8, "0");
-    let fechaTxt = "-";
-    let horaTxt = "-";
-    if (v.fecha) {
-        const [f, hh] = v.fecha.replace("T", " ").substring(0, 19).split(" ");
-        const [aa, mm, dd] = f.split("-");
-        fechaTxt = `${dd}/${mm}/${aa}`;
-        horaTxt = hh || "-";
-    }
-
-    document.getElementById("remito-numero").textContent = numeroFormateado;
-    document.getElementById("remito-fecha").textContent = fechaTxt;
-    document.getElementById("remito-hora").textContent = horaTxt;
-    document.getElementById("remito-vendedor").textContent = usuarioActual ? `${usuarioActual.nombre} ${usuarioActual.apellido}` : `Operador #${v.usuarioId}`;
-    document.getElementById("remito-total").textContent = fmtMoneda(v.importeTotal);
-
-    const tbodyItems = document.getElementById("remito-tbody-items");
-    tbodyItems.innerHTML = "";
-
-    const detalles = v.detalles || [];
-    detalles.forEach(d => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>${d.productoCodigo}</td>
-            <td>${d.descripcion || "Artículo Natural"}</td>
-            <td>${d.cantidad}</td>
-            <td>${fmtMoneda(d.precioUnitario)}</td>
-            <td>${fmtMoneda(d.subtotal)}</td>
-        `;
-        tbodyItems.appendChild(tr);
-    });
-
-    // Renglones vacíos hasta completar la grilla, como en un remito preimpreso
-    const RENGLONES_MINIMOS = 18;
-    for (let i = detalles.length; i < RENGLONES_MINIMOS; i++) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = "<td>&nbsp;</td><td></td><td></td><td></td><td></td>";
-        tbodyItems.appendChild(tr);
-    }
-
-    document.getElementById("modal-remito").style.display = "flex";
-}
-
-function cerrarModalRemito() {
-    document.getElementById("modal-remito").style.display = "none";
-}
-
-function imprimirRemito() {
-    window.print();
-}
-
-function filtrarHistorialVentas() {
-    const txt = document.getElementById("historial-buscar-texto").value.toLowerCase().trim();
-    const desde = document.getElementById("historial-desde").value;
-    const hasta = document.getElementById("historial-hasta").value;
-
-    const filtradas = listaVentasGlobal.filter(v => {
-        let coincideTexto = true;
-        if (txt) {
-            const fechaStr = v.fecha ? v.fecha.toLowerCase() : "";
-            const enDetalles = v.detalles && v.detalles.some(d => 
-                (d.productoCodigo && d.productoCodigo.toLowerCase().includes(txt)) ||
-                (d.descripcion && d.descripcion.toLowerCase().includes(txt))
-            );
-            coincideTexto = fechaStr.includes(txt) || enDetalles;
-        }
-
-        let coincideFecha = true;
-        if (v.fecha) {
-            const fechaVenta = v.fecha.substring(0, 10);
-            if (desde && fechaVenta < desde) coincideFecha = false;
-            if (hasta && fechaVenta > hasta) coincideFecha = false;
-        }
-
-        return coincideTexto && coincideFecha;
-    });
-
-    renderizarHistorialVentas(filtradas);
-}
-
-function limpiarFiltrosHistorial() {
-    document.getElementById("historial-buscar-texto").value = "";
-    document.getElementById("historial-desde").value = "";
-    document.getElementById("historial-hasta").value = "";
-    renderizarHistorialVentas(listaVentasGlobal);
-}
-
-// ============================================================
-// 4. INVENTARIO DE PRODUCTOS (ALTA, MODIFICACIÓN, BAJA, REACTIVACIÓN Y REPOSICIÓN)
+// 3. INVENTARIO DE PRODUCTOS (ALTA, MODIFICACIÓN, BAJA Y REACTIVACIÓN)
 // ============================================================
 async function cargarProductos() {
     try {
@@ -581,7 +425,6 @@ function renderizarTablaProductos(productos) {
                 </span>
             </td>
             <td style="white-space: nowrap;">
-                <button class="btn btn-primary btn-sm" onclick="abrirModalReponerStock('${p.codigo}')">+ Reponer</button>
                 <button class="btn btn-secondary btn-sm" onclick="editarProducto('${p.codigo}')">Modificar</button>
                 ${p.activo 
                     ? `<button class="btn btn-outline-danger btn-sm" onclick="darBajaProducto('${p.codigo}')">Baja</button>` 
@@ -725,88 +568,8 @@ async function reactivarProducto(codigo) {
     }
 }
 
-async function abrirModalReponerStock(codigo) {
-    const p = listaProductosGlobal.find(item => item.codigo === codigo);
-    if (!p) return;
-
-    reponiendoProductoCodigo = p.codigo;
-    document.getElementById("form-reponer-stock").reset();
-    document.getElementById("rep-producto-titulo").textContent = `${p.codigo} - ${p.descripcion}`;
-    document.getElementById("rep-stock-actual").textContent = p.stockActual;
-
-    const selectProv = document.getElementById("rep-proveedor");
-    selectProv.innerHTML = `<option value="">-- Sin especificar / Compra directa --</option>`;
-    try {
-        const res = await fetch("/api/proveedores");
-        if (res.ok) {
-            const proveedores = await res.json();
-            proveedores.forEach(prov => {
-                const opt = document.createElement("option");
-                opt.value = prov.razonSocial;
-                opt.textContent = `${prov.razonSocial} (${prov.rubro})`;
-                selectProv.appendChild(opt);
-            });
-        }
-    } catch (e) {
-        console.error("No se pudieron cargar los proveedores:", e);
-    }
-
-    document.getElementById("modal-reponer-stock").style.display = "flex";
-    document.getElementById("rep-cantidad").focus();
-}
-
-function cerrarModalReponerStock() {
-    document.getElementById("modal-reponer-stock").style.display = "none";
-    reponiendoProductoCodigo = null;
-}
-
-async function guardarReposicionStock(e) {
-    e.preventDefault();
-    const p = listaProductosGlobal.find(item => item.codigo === reponiendoProductoCodigo);
-    if (!p) return;
-
-    const cantidadIngresada = parseInt(document.getElementById("rep-cantidad").value, 10);
-    if (isNaN(cantidadIngresada) || cantidadIngresada <= 0) {
-        alert("Ingrese una cantidad válida mayor a cero.");
-        return;
-    }
-
-    const nuevoStock = p.stockActual + cantidadIngresada;
-    const proveedorElegido = document.getElementById("rep-proveedor").value;
-
-    const payload = {
-        codigo: p.codigo,
-        descripcion: p.descripcion,
-        categoria: p.categoria,
-        precioUnitario: p.precioUnitario,
-        stockActual: nuevoStock,
-        stockMinimo: p.stockMinimo,
-        activo: p.activo
-    };
-
-    try {
-        const res = await fetch("/api/productos", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-        if (res.ok && data.exito) {
-            const detalleProv = proveedorElegido ? ` (Proveedor: ${proveedorElegido})` : "";
-            alert(`Stock actualizado: +${cantidadIngresada} u. agregadas${detalleProv}. Nuevo stock disponible: ${nuevoStock} u.`);
-            cerrarModalReponerStock();
-            cargarProductos();
-        } else {
-            alert(data.error || "No se pudo actualizar el stock.");
-        }
-    } catch (err) {
-        alert("Error de conexión al reponer stock.");
-    }
-}
-
 // ============================================================
-// 5. CONTROL DE STOCK MÍNIMO (GERENTE Y ADMINISTRATIVO)
+// 4. CONTROL DE STOCK MÍNIMO (GERENTE)
 // ============================================================
 async function cargarStockBajo() {
     try {
@@ -842,7 +605,7 @@ async function cargarStockBajo() {
 }
 
 // ============================================================
-// 6. REPORTE DE RECAUDACIÓN (GERENTE Y ADMINISTRATIVO)
+// 5. REPORTE DE RECAUDACIÓN (GERENTE)
 // ============================================================
 async function consultarRecaudacion() {
     const desde = document.getElementById("fecha-desde").value;
@@ -867,459 +630,4 @@ function limpiarFiltroRecaudacion() {
     document.getElementById("fecha-desde").value = "";
     document.getElementById("fecha-hasta").value = "";
     consultarRecaudacion();
-}
-
-// ============================================================
-// 7. CLIENTES Y PROMOCIONES (ADMINISTRATIVO)
-// ============================================================
-function validarEmail(email) {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-    return regex.test(email);
-}
-
-async function cargarClientes() {
-    try {
-        const res = await fetch("/api/clientes");
-        listaClientesGlobal = await res.json();
-        renderizarTablaClientes(listaClientesGlobal);
-    } catch (err) {
-        console.error("Error al cargar clientes:", err);
-    }
-}
-
-function renderizarTablaClientes(clientes) {
-    const tbody = document.getElementById("tbody-clientes");
-    tbody.innerHTML = "";
-
-    if (!clientes || clientes.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center">No hay clientes registrados aún.</td></tr>`;
-        return;
-    }
-
-    clientes.forEach(c => {
-        const tr = document.createElement("tr");
-        const fechaFmt = c.fechaRegistro ? c.fechaRegistro.replace("T", " ").substring(0, 10) : "-";
-        tr.innerHTML = `
-            <td><strong>${c.nombre} ${c.apellido}</strong></td>
-            <td>${c.telefono}</td>
-            <td>${c.email || '-'}</td>
-            <td>
-                <span class="badge ${c.recibePromociones ? 'badge-success' : 'badge-warning'}">
-                    ${c.recibePromociones ? 'Adherido a Promos' : 'No recibe'}
-                </span>
-            </td>
-            <td>${fechaFmt}</td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-function abrirModalCliente() {
-    document.getElementById("form-cliente").reset();
-    document.getElementById("cli-promociones").checked = true;
-    document.getElementById("modal-cliente").style.display = "flex";
-}
-
-function cerrarModalCliente() {
-    document.getElementById("modal-cliente").style.display = "none";
-}
-
-async function guardarCliente(e) {
-    e.preventDefault();
-    const telefono = document.getElementById("cli-telefono").value.trim();
-    const email = document.getElementById("cli-email").value.trim();
-
-    if (!/^[0-9]{7,15}$/.test(telefono)) {
-        alert("El teléfono debe contener únicamente números (entre 7 y 15 dígitos).");
-        return;
-    }
-    if (email && !validarEmail(email)) {
-        alert("Ingrese un correo electrónico válido (ej: usuario@gmail.com).");
-        return;
-    }
-
-    const payload = {
-        nombre: document.getElementById("cli-nombre").value.trim(),
-        apellido: document.getElementById("cli-apellido").value.trim(),
-        telefono,
-        email,
-        recibePromociones: document.getElementById("cli-promociones").checked ? "true" : "false"
-    };
-
-    try {
-        const res = await fetch("/api/clientes", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (res.ok && data.exito) {
-            alert("Cliente registrado con éxito para campañas y promociones.");
-            cerrarModalCliente();
-            cargarClientes();
-        } else {
-            alert(data.error || "No se pudo registrar el cliente.");
-        }
-    } catch (err) {
-        alert("Error de conexión al registrar cliente.");
-    }
-}
-
-// ============================================================
-// 8. PROVEEDORES (ADMINISTRATIVO)
-// ============================================================
-async function cargarProveedores() {
-    try {
-        const res = await fetch("/api/proveedores");
-        const proveedores = await res.json();
-        renderizarTablaProveedores(proveedores);
-    } catch (err) {
-        console.error("Error al cargar proveedores:", err);
-    }
-}
-
-function renderizarTablaProveedores(proveedores) {
-    const tbody = document.getElementById("tbody-proveedores");
-    tbody.innerHTML = "";
-
-    if (!proveedores || proveedores.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center">No hay proveedores registrados.</td></tr>`;
-        return;
-    }
-
-    proveedores.forEach(p => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td><strong>${p.razonSocial}</strong></td>
-            <td><code>${p.cuit}</code></td>
-            <td><span class="badge">${p.rubro}</span></td>
-            <td>${p.telefono}</td>
-            <td>${p.email || '-'}</td>
-            <td><span class="badge badge-success">Activo</span></td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-function abrirModalProveedor() {
-    document.getElementById("form-proveedor").reset();
-    document.getElementById("modal-proveedor").style.display = "flex";
-}
-
-function cerrarModalProveedor() {
-    document.getElementById("modal-proveedor").style.display = "none";
-}
-
-async function guardarProveedor(e) {
-    e.preventDefault();
-    const cuit = document.getElementById("prov-cuit").value.trim();
-    const telefono = document.getElementById("prov-telefono").value.trim();
-    const email = document.getElementById("prov-email").value.trim();
-
-    if (!/^[0-9]{11}$/.test(cuit)) {
-        alert("El CUIT debe contener exactamente 11 dígitos numéricos.");
-        return;
-    }
-    if (!/^[0-9]{7,15}$/.test(telefono)) {
-        alert("El teléfono debe contener únicamente números (entre 7 y 15 dígitos).");
-        return;
-    }
-    if (!validarEmail(email)) {
-        alert("Ingrese un correo electrónico válido (ej: ventas@gmail.com).");
-        return;
-    }
-
-    const payload = {
-        razonSocial: document.getElementById("prov-razon").value.trim(),
-        cuit,
-        rubro: document.getElementById("prov-rubro").value.trim(),
-        telefono,
-        email
-    };
-
-    try {
-        const res = await fetch("/api/proveedores", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (res.ok && data.exito) {
-            alert("Proveedor guardado con éxito.");
-            cerrarModalProveedor();
-            cargarProveedores();
-        } else {
-            alert(data.error || "No se pudo guardar el proveedor.");
-        }
-    } catch (err) {
-        alert("Error de conexión al guardar proveedor.");
-    }
-}
-
-// ============================================================
-// 9. CAJA DIARIA, COBROS A CLIENTES, CONTROL DE SALDO NO NEGATIVO Y CIERRE DIARIO
-// ============================================================
-async function cargarCaja() {
-    const esAdmin = usuarioActual && usuarioActual.perfil === "ADMINISTRATIVO";
-    const fechaSeleccionada = document.getElementById("caja-filtro-fecha").value || obtenerFechaHoyLocal();
-
-    document.getElementById("caja-fecha-hoy").textContent = fechaSeleccionada;
-
-    if (esAdmin) {
-        document.getElementById("caja-titulo-vista").textContent = "Caja Diaria y Movimientos";
-        document.getElementById("caja-subtitulo-vista").textContent = "Control diario de ingresos por ventas y cobros a clientes, egresos y cierre de jornada.";
-        document.getElementById("caja-acciones-admin").style.display = "flex";
-    } else {
-        document.getElementById("caja-titulo-vista").textContent = "Caja Diaria y Movimientos (Gerencia)";
-        document.getElementById("caja-subtitulo-vista").textContent = "Supervisión de arqueo diario, movimientos y cierres de caja.";
-        document.getElementById("caja-acciones-admin").style.display = "none";
-    }
-
-    try {
-        const resMovs = await fetch("/api/caja/movimientos");
-        const todosMovs = await resMovs.json();
-
-        // Filtramos por la fecha seleccionada para el arqueo diario
-        const movsDelDia = todosMovs.filter(m => m.fecha && m.fecha.startsWith(fechaSeleccionada));
-
-        // Saldo acumulado real en caja (para validar que nunca quede negativo)
-        const resTotales = await fetch("/api/caja/totales");
-        const totales = await resTotales.json();
-        saldoActualCaja = Math.max(0, totales.saldo || 0);
-
-        let ingresosDia = 0;
-        let egresosDia = 0;
-        let cierreDelDia = null;
-
-        movsDelDia.forEach(m => {
-            if (m.tipo === "CIERRE_CAJA_DIARIO") {
-                cierreDelDia = m;
-            } else if (m.tipo.startsWith("INGRESO")) {
-                ingresosDia += m.monto;
-            } else if (m.tipo.startsWith("EGRESO")) {
-                egresosDia += m.monto;
-            }
-        });
-
-        document.getElementById("caja-metric-ingresos").textContent = `$ ${ingresosDia.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
-        document.getElementById("caja-metric-egresos").textContent = `$ ${egresosDia.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
-        document.getElementById("caja-metric-saldo").textContent = `$ ${saldoActualCaja.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
-
-        const estadoBadge = document.getElementById("caja-estado-badge");
-        const cierreInfo = document.getElementById("caja-ultimo-cierre-info");
-
-        if (cierreDelDia) {
-            const horaCierre = cierreDelDia.fecha.replace("T", " ").substring(11, 16);
-            estadoBadge.textContent = "CAJA CERRADA";
-            estadoBadge.className = "badge badge-warning";
-            cierreInfo.textContent = `Cierre diario realizado a las ${horaCierre} hs — ${cierreDelDia.concepto}`;
-        } else {
-            estadoBadge.textContent = "CAJA ABIERTA";
-            estadoBadge.className = "badge badge-success";
-            cierreInfo.textContent = "Jornada en curso — Pendiente de cierre diario al finalizar la atención.";
-        }
-
-        renderizarTablaCaja(movsDelDia);
-
-    } catch (err) {
-        console.error("Error al cargar datos de caja:", err);
-    }
-}
-
-function renderizarTablaCaja(movs) {
-    const tbody = document.getElementById("tbody-caja-movimientos");
-    tbody.innerHTML = "";
-
-    if (!movs || movs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center">No se registran movimientos de caja en la fecha seleccionada.</td></tr>`;
-        return;
-    }
-
-    movs.forEach(m => {
-        const esCierre = m.tipo === "CIERRE_CAJA_DIARIO";
-        const esIngreso = m.tipo.startsWith("INGRESO");
-        const fechaFmt = m.fecha ? m.fecha.replace("T", " ").substring(0, 19) : "-";
-        const tr = document.createElement("tr");
-
-        let tipoLabel = m.tipo;
-        let badgeClass = esIngreso ? "badge-success" : "badge-danger";
-        if (m.tipo === "INGRESO_VENTA") tipoLabel = "Ingreso por Venta";
-        if (m.tipo === "INGRESO_COBRO_CLIENTE") tipoLabel = "Cobro a Cliente";
-        if (m.tipo === "INGRESO_APORTE_CAJA") tipoLabel = "Apertura / Refuerzo Caja";
-        if (m.tipo === "EGRESO_PROVEEDOR") tipoLabel = "Pago a Proveedor";
-        if (m.tipo === "EGRESO_IMPUESTOS") tipoLabel = "Pago de Impuestos/Servicios";
-        if (m.tipo === "EGRESO_GASTOS") tipoLabel = "Gastos Operativos";
-        if (esCierre) {
-            tipoLabel = "Cierre Diario de Caja";
-            badgeClass = "badge-warning";
-        }
-
-        const montoHtml = esCierre
-            ? `<strong>Arqueo: $ ${m.monto.toFixed(2)}</strong>`
-            : `<strong class="${esIngreso ? 'text-primary' : 'text-danger'}">${esIngreso ? '+' : '-'} $ ${m.monto.toFixed(2)}</strong>`;
-
-        tr.innerHTML = `
-            <td>${fechaFmt}</td>
-            <td><span class="badge ${badgeClass}">${tipoLabel}</span></td>
-            <td>${m.concepto}</td>
-            <td class="text-right">${montoHtml}</td>
-            <td>Usuario #${m.usuarioId}</td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-async function abrirModalIngresoCaja() {
-    document.getElementById("form-ingreso-caja").reset();
-
-    // Cargar clientes registrados para permitir asociar un cobro a un cliente
-    try {
-        const res = await fetch("/api/clientes");
-        listaClientesGlobal = await res.json();
-        const selectCli = document.getElementById("ingreso-cliente");
-        selectCli.innerHTML = `<option value="">-- Sin cliente específico / Mostrador --</option>`;
-        listaClientesGlobal.forEach(c => {
-            const opt = document.createElement("option");
-            opt.value = `${c.nombre} ${c.apellido}`;
-            opt.textContent = `${c.nombre} ${c.apellido} (Tel: ${c.telefono})`;
-            selectCli.appendChild(opt);
-        });
-    } catch (e) {
-        console.error("No se pudieron cargar los clientes para el ingreso:", e);
-    }
-
-    document.getElementById("modal-ingreso-caja").style.display = "flex";
-}
-
-function cerrarModalIngresoCaja() {
-    document.getElementById("modal-ingreso-caja").style.display = "none";
-}
-
-function autocompletarConceptoCliente() {
-    const clienteNombre = document.getElementById("ingreso-cliente").value;
-    const conceptoInput = document.getElementById("ingreso-concepto");
-    if (clienteNombre) {
-        conceptoInput.value = `Cobro / Pago recibido de cliente: ${clienteNombre}`;
-    }
-}
-
-async function guardarIngresoCaja(e) {
-    e.preventDefault();
-    const monto = parseFloat(document.getElementById("ingreso-monto").value);
-    if (isNaN(monto) || monto <= 0) {
-        alert("El monto del ingreso debe ser mayor a $0,00.");
-        return;
-    }
-
-    const payload = {
-        tipo: document.getElementById("ingreso-tipo").value,
-        concepto: document.getElementById("ingreso-concepto").value.trim(),
-        monto: monto,
-        usuarioId: String(usuarioActual.id)
-    };
-
-    try {
-        const res = await fetch("/api/caja/egreso", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (res.ok && data.exito) {
-            alert("Ingreso registrado correctamente en la caja.");
-            cerrarModalIngresoCaja();
-            cargarCaja();
-        } else {
-            alert(data.error || "No se pudo registrar el ingreso.");
-        }
-    } catch (err) {
-        alert("Error de conexión al registrar el ingreso.");
-    }
-}
-
-function abrirModalEgresoCaja() {
-    document.getElementById("form-egreso-caja").reset();
-    document.getElementById("egreso-saldo-disponible").textContent = `$ ${saldoActualCaja.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`;
-    document.getElementById("egreso-monto").max = saldoActualCaja.toFixed(2);
-    document.getElementById("modal-egreso-caja").style.display = "flex";
-}
-
-function cerrarModalEgresoCaja() {
-    document.getElementById("modal-egreso-caja").style.display = "none";
-}
-
-async function guardarEgresoCaja(e) {
-    e.preventDefault();
-    const monto = parseFloat(document.getElementById("egreso-monto").value);
-
-    if (isNaN(monto) || monto <= 0) {
-        alert("El monto del egreso debe ser mayor a $0,00.");
-        return;
-    }
-
-    // Regla de negocio: el saldo en caja NUNCA puede quedar negativo
-    if (monto > saldoActualCaja) {
-        alert(`Operación rechazada: fondos insuficientes en caja. El monto a egresar ($ ${monto.toFixed(2)}) supera el saldo disponible actual ($ ${saldoActualCaja.toFixed(2)}). La caja no puede quedar con saldo negativo.`);
-        return;
-    }
-
-    const payload = {
-        tipo: document.getElementById("egreso-tipo").value,
-        concepto: document.getElementById("egreso-concepto").value.trim(),
-        monto: monto,
-        usuarioId: String(usuarioActual.id)
-    };
-
-    try {
-        const res = await fetch("/api/caja/egreso", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (res.ok && data.exito) {
-            alert("Egreso de caja registrado correctamente.");
-            cerrarModalEgresoCaja();
-            cargarCaja();
-        } else {
-            alert(data.error || "No se pudo registrar el egreso.");
-        }
-    } catch (err) {
-        alert("Error de conexión al registrar egreso.");
-    }
-}
-
-async function realizarCierreCajaDiario() {
-    const fechaHoy = obtenerFechaHoyLocal();
-    const confirmacion = confirm(
-        `¿Confirma el CIERRE DIARIO DE CAJA correspondiente a la fecha ${fechaHoy}?\n\n` +
-        `Saldo declarado en arqueo: $ ${saldoActualCaja.toFixed(2)}\n` +
-        `Responsable: ${usuarioActual.nombre} ${usuarioActual.apellido}`
-    );
-    if (!confirmacion) return;
-
-    const payload = {
-        tipo: "CIERRE_CAJA_DIARIO",
-        concepto: `Cierre diario de jornada (${fechaHoy}) — Arqueo confirmado: $ ${saldoActualCaja.toFixed(2)}`,
-        monto: saldoActualCaja,
-        usuarioId: String(usuarioActual.id)
-    };
-
-    try {
-        const res = await fetch("/api/caja/egreso", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (res.ok && data.exito) {
-            alert("Cierre diario de caja asentado correctamente.");
-            document.getElementById("caja-filtro-fecha").value = fechaHoy;
-            cargarCaja();
-        } else {
-            alert(data.error || "No se pudo registrar el cierre diario de caja.");
-        }
-    } catch (err) {
-        alert("Error de conexión al registrar el cierre diario.");
-    }
 }

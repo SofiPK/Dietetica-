@@ -1,10 +1,9 @@
 package com.vidanatural.service;
 
+import java.time.LocalDate;
+
 import com.vidanatural.dao.VentaDAO;
 import com.vidanatural.model.Venta;
-
-import java.time.LocalDate;
-import java.util.List;
 
 public class GestorVentas {
     private final VentaDAO ventaDAO;
@@ -28,10 +27,6 @@ public class GestorVentas {
 
     public double calcularRecaudado(LocalDate desde, LocalDate hasta) {
         return ventaDAO.calcularRecaudado(desde, hasta);
-    }
-
-    public List<Venta> listarVentas() {
-        return ventaDAO.listarVentas();
     }
 
     public CalculadoraVenta getCalculadora() {
