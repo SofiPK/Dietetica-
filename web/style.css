@@ -79,23 +79,6 @@ body {
     margin-top: 0.3rem;
 }
 
-.login-demo-help {
-    margin-top: 1.8rem;
-    padding-top: 1.2rem;
-    border-top: 1px solid var(--border-color);
-    font-size: 0.82rem;
-    color: var(--text-secondary);
-    line-height: 1.5;
-}
-
-.login-demo-help code {
-    background: #f1f5f9;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: monospace;
-    color: var(--text-primary);
-}
-
 /* ================= HEADER BLANCO SUPERIOR ================= */
 .app-header {
     height: 60px;
@@ -258,36 +241,6 @@ body {
     display: none;
 }
 
-.sidebar-user-box {
-    background: var(--primary-light);
-    border-radius: var(--radius);
-    padding: 0.85rem 1rem;
-    margin-bottom: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    border: 1px solid #c8e6c9;
-}
-
-.sub-label {
-    font-size: 0.7rem;
-    color: var(--primary-hover);
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-.user-display {
-    font-size: 0.95rem;
-    color: var(--text-primary);
-    font-weight: 600;
-}
-
-.role-display {
-    font-size: 0.75rem;
-    color: var(--primary);
-    font-weight: 700;
-}
-
 .sidebar-nav {
     display: flex;
     flex-direction: column;
@@ -365,137 +318,8 @@ body {
     color: var(--text-primary);
 }
 
-/* ================= HISTORIAL DE VENTAS ================= */
-.erp-section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.erp-section-header h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
-.erp-counter-badge {
-    background: #ffffff;
-    border: 1px solid var(--border-color);
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--primary);
-}
-
-.erp-filter-card {
-    background: #ffffff;
-    margin-bottom: 1.5rem;
-}
-
-.filter-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.filter-title {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--text-secondary);
-    letter-spacing: 0.5px;
-}
-
-.btn-link {
-    background: none;
-    border: none;
-    color: var(--primary);
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: underline;
-}
-
-.metrics-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.metric-card {
-    background: #ffffff;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    padding: 1.3rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    box-shadow: var(--shadow-sm);
-}
-
-.metric-label {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    font-weight: 700;
-    letter-spacing: 0.5px;
-}
-
-.metric-value {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--text-primary);
-}
-
 .text-primary {
     color: var(--primary);
-}
-
-/* ================= ACORDEÓN DE DETALLE DE VENTA ================= */
-.btn-expand-sale {
-    background: var(--primary);
-    color: #ffffff;
-    border: none;
-    width: 28px;
-    height: 28px;
-    border-radius: 4px;
-    font-size: 1rem;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.15s;
-}
-
-.btn-expand-sale:hover {
-    background: var(--primary-hover);
-}
-
-.btn-expand-sale.expanded {
-    background: var(--secondary);
-}
-
-.sale-accordion-row {
-    background-color: #f8fafc;
-}
-
-.sale-accordion-box {
-    padding: 1rem 1.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    margin: 0.5rem 0;
-    background: #ffffff;
-}
-
-.sale-accordion-box h4 {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 0.75rem;
-    letter-spacing: 0.5px;
 }
 
 /* ================= TABLAS FLAT ================= */
@@ -541,12 +365,17 @@ body {
     text-align: center;
 }
 
+.text-right {
+    text-align: right;
+}
+
 /* ================= FORMULARIOS Y BOTONES ================= */
 .form-group {
     display: flex;
     flex-direction: column;
     margin-bottom: 1rem;
     flex: 1;
+    min-width: 0;
 }
 
 .form-group label {
@@ -558,6 +387,7 @@ body {
 
 .form-group input,
 .form-group select {
+    width: 100%;
     padding: 0.65rem 0.8rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
@@ -580,6 +410,24 @@ body {
 
 .flex-2 { flex: 2; }
 .align-end { justify-content: flex-end; }
+
+/* Ajuste específico para las 3 columnas numéricas del modal de producto */
+#modal-producto .form-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+#modal-producto .form-row .form-group {
+    margin-bottom: 0;
+}
+
+#modal-producto .form-row label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.82rem;
+}
 
 .btn {
     padding: 0.65rem 1.2rem;
@@ -696,6 +544,27 @@ body {
     color: var(--primary);
 }
 
+.btn-sm {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    border-radius: 4px;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+}
+
+.btn-link:hover {
+    color: var(--primary-hover);
+}
+
 /* ================= BADGES & ALERTAS ================= */
 .badge {
     padding: 0.25rem 0.55rem;
@@ -759,322 +628,7 @@ body {
     color: #ffffff;
 }
 
-/* ================= MODAL REMITO COMERCIAL (formato A4 tradicional) ================= */
-.modal-remito-card {
-    max-width: 860px;
-    width: 95%;
-    max-height: 92vh;
-    display: flex;
-    flex-direction: column;
-    padding: 1.25rem;
-    box-sizing: border-box;
-}
-
-.remito-scroll {
-    flex: 1;
-    min-height: 0;
-    overflow: auto;
-    background: #e5e7eb;
-    padding: 1rem;
-    border-radius: var(--radius);
-    margin-bottom: 1rem;
-}
-
-/* Hoja con proporción A4 (210 x 297 mm) */
-.remito-paper {
-    width: 210mm;
-    max-width: 100%;
-    min-height: 297mm;
-    margin: 0 auto;
-    background: #ffffff;
-    color: #000000;
-    box-sizing: border-box;
-    padding: 10mm;
-    border: 1px solid #9ca3af;
-    display: flex;
-    flex-direction: column;
-    font-size: 12px;
-    line-height: 1.4;
-}
-
-.remito-original {
-    text-align: center;
-    font-weight: 700;
-    letter-spacing: 4px;
-    font-size: 13px;
-    border: 1.5px solid #000;
-    border-bottom: none;
-    padding: 3px 0;
-}
-
-.remito-cab {
-    display: grid;
-    grid-template-columns: 1fr 26mm 1fr;
-    border: 1.5px solid #000;
-    margin-bottom: 4mm;
-}
-
-.remito-cab-izq,
-.remito-cab-der {
-    padding: 4mm;
-}
-
-.remito-cab-centro {
-    border-left: 1.5px solid #000;
-    border-right: 1.5px solid #000;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-}
-
-.remito-box-letra {
-    border: 1.5px solid #000;
-    border-top: none;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2mm 1mm 1.5mm;
-}
-
-.letra-r {
-    font-size: 38px;
-    font-weight: 800;
-    line-height: 1;
-}
-
-.letra-sub {
-    font-size: 8px;
-    font-weight: 700;
-    text-transform: uppercase;
-    text-align: center;
-    margin-top: 2px;
-    line-height: 1.2;
-}
-
-.remito-empresa-nombre {
-    font-size: 24px;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-    color: #14532d;
-}
-
-.remito-empresa-rubro {
-    font-size: 13px;
-    font-weight: 700;
-    margin-bottom: 2px;
-}
-
-.remito-empresa-dir {
-    font-size: 11px;
-}
-
-.remito-doc-titulo {
-    font-size: 24px;
-    font-weight: 800;
-    letter-spacing: 1px;
-}
-
-.remito-doc-numero {
-    font-size: 15px;
-    font-weight: 700;
-    margin-bottom: 4px;
-}
-
-.remito-dato {
-    font-size: 11px;
-}
-
-.remito-cliente {
-    border: 1.5px solid #000;
-    margin-bottom: 4mm;
-}
-
-.remito-cliente-fila {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr;
-    gap: 6mm;
-    padding: 2mm 4mm;
-    border-bottom: 1px solid #000;
-}
-
-.remito-cliente-fila:last-child {
-    border-bottom: none;
-}
-
-.remito-items-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-    border: 1.5px solid #000;
-}
-
-.remito-items-table th {
-    background: #f1f5f9;
-    border-bottom: 1.5px solid #000;
-    border-right: 1px solid #000;
-    padding: 5px 6px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    text-align: left;
-}
-
-.remito-items-table td {
-    border-right: 1px solid #000;
-    padding: 4px 6px;
-    height: 7.5mm;
-    font-size: 12px;
-    vertical-align: middle;
-    overflow: hidden;
-}
-
-.remito-items-table th:last-child,
-.remito-items-table td:last-child {
-    border-right: none;
-}
-
-.remito-items-table th:nth-child(1), .remito-items-table td:nth-child(1) { width: 16%; }
-.remito-items-table th:nth-child(2), .remito-items-table td:nth-child(2) { width: 38%; word-break: break-word; }
-.remito-items-table th:nth-child(3), .remito-items-table td:nth-child(3) { width: 10%; text-align: center; }
-.remito-items-table th:nth-child(4), .remito-items-table td:nth-child(4) { width: 18%; text-align: right; white-space: nowrap; }
-.remito-items-table th:nth-child(5), .remito-items-table td:nth-child(5) { width: 18%; text-align: right; white-space: nowrap; }
-
-.text-right {
-    text-align: right;
-}
-
-.remito-pie {
-    display: flex;
-    justify-content: space-between;
-    align-items: stretch;
-    gap: 4mm;
-    border: 1.5px solid #000;
-    padding: 3mm 4mm;
-    margin-top: auto;
-    break-inside: avoid;
-}
-
-.remito-pie-izq {
-    flex: 1;
-}
-
-.remito-obs-titulo {
-    font-weight: 700;
-    font-size: 11px;
-}
-
-.remito-obs-linea {
-    border-bottom: 1px solid #6b7280;
-    height: 6mm;
-}
-
-.remito-firmas {
-    display: flex;
-    gap: 6mm;
-    margin-top: 12mm;
-}
-
-.firma-linea {
-    flex: 1;
-    border-top: 1px solid #000;
-    text-align: center;
-    font-size: 10px;
-    padding-top: 2px;
-}
-
-.remito-recibi {
-    margin-top: 3px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-.remito-totales-box {
-    min-width: 55mm;
-    border: 1.5px solid #000;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: center;
-    padding: 3mm 4mm;
-    white-space: nowrap;
-}
-
-.remito-total-txt {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 1px;
-}
-
-.remito-total-val {
-    font-size: 22px;
-    font-weight: 800;
-}
-
-.remito-leyenda {
-    text-align: center;
-    font-size: 10px;
-    margin-top: 3mm;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* Soporte de Impresión de Remito: hoja A4 completa, sin encabezados del navegador */
-@page {
-    size: A4;
-    margin: 0;
-}
-
-@media print {
-    html, body {
-        background: #ffffff !important;
-        height: auto !important;
-        overflow: visible !important;
-    }
-    body > *:not(#modal-remito) {
-        display: none !important;
-    }
-    #modal-remito {
-        position: static !important;
-        display: block !important;
-        background: none !important;
-        padding: 0 !important;
-        width: auto !important;
-        height: auto !important;
-        overflow: visible !important;
-    }
-    #modal-remito .modal-card {
-        box-shadow: none !important;
-        border: none !important;
-        padding: 0 !important;
-        max-width: none !important;
-        max-height: none !important;
-        width: 100% !important;
-        display: block !important;
-    }
-    #modal-remito .modal-header,
-    #modal-remito .modal-footer {
-        display: none !important;
-    }
-    .remito-scroll {
-        padding: 0 !important;
-        background: none !important;
-        overflow: visible !important;
-    }
-    .remito-paper {
-        width: 210mm !important;
-        height: 297mm !important;
-        min-height: 0 !important;
-        border: none !important;
-        margin: 0 !important;
-        padding: 10mm !important;
-        overflow: hidden;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-}
-
+/* ================= MODALES ================= */
 .modal-backdrop {
     position: fixed;
     top: 0;
@@ -1094,7 +648,7 @@ body {
 .modal-card {
     background: #ffffff;
     width: 100%;
-    max-width: 520px;
+    max-width: 540px;
     border-radius: var(--radius);
     padding: 1.8rem;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
@@ -1167,7 +721,6 @@ body {
         font-size: 0.68rem;
     }
 
-    /* Menú lateral tipo drawer flotante en pantallas chicas */
     .sidebar {
         position: fixed;
         top: 60px;
@@ -1189,42 +742,15 @@ body {
         padding: 1rem 0.85rem;
     }
 
-    .form-row {
+    .form-row,
+    #modal-producto .form-row {
+        display: flex;
         flex-direction: column;
         gap: 0.6rem;
-    }
-
-    .erp-section-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.6rem;
-    }
-
-    .metrics-row {
-        grid-template-columns: 1fr 1fr;
-        gap: 0.75rem;
-    }
-
-    .metric-value {
-        font-size: 1.4rem;
     }
 
     .modal-card {
         padding: 1.2rem;
-    }
-
-    .modal-remito-card {
-        padding: 1rem;
-        max-height: 94vh;
-    }
-
-    .remito-scroll {
-        padding: 0.5rem;
-    }
-
-    .remito-paper {
-        min-width: 600px;
-        padding: 6mm;
     }
 
     .table th, .table td {
@@ -1243,10 +769,6 @@ body {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-    }
-
-    .metrics-row {
-        grid-template-columns: 1fr;
     }
 
     .modal-footer {

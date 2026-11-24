@@ -7,6 +7,7 @@ let usuarioActual = null;
 let carritoActual = [];
 let productoSeleccionadoParaVenta = null;
 let listaProductosGlobal = [];
+let listaVentasGlobal = [];
 let editandoProductoCodigo = null;
 
 // Interceptor global de fetch para enviar el perfil en cada petición API
@@ -86,6 +87,89 @@ async function iniciarSesion(e) {
     }
 }
 
+// ============================================================
+// RECUPERACIÓN DE CONTRASEÑA (FLUJO MOCK EN DESARROLLO)
+// ============================================================
+const CODIGO_RECUPERACION_MOCK = "482910";
+
+function mostrarPasoRecuperacion(paso) {
+    const pasos = ["ingreso", "correo", "codigo", "nueva-clave"];
+    pasos.forEach(p => {
+        const el = document.getElementById(`login-paso-${p}`);
+        if (el) el.style.display = (p === paso) ? "block" : "none";
+    });
+
+    ["login-error", "login-exito", "recup-correo-error", "recup-codigo-error", "recup-clave-error"].forEach(id => {
+        const alerta = document.getElementById(id);
+        if (alerta) alerta.style.display = "none";
+    });
+
+    if (paso === "correo") {
+        document.getElementById("form-recup-correo").reset();
+        document.getElementById("recup-email").focus();
+    } else if (paso === "codigo") {
+        document.getElementById("form-recup-codigo").reset();
+        document.getElementById("recup-codigo").focus();
+    } else if (paso === "nueva-clave") {
+        document.getElementById("form-recup-clave").reset();
+        document.getElementById("recup-nueva-pass").focus();
+    }
+}
+
+function enviarCodigoRecuperacion(e) {
+    e.preventDefault();
+    const email = document.getElementById("recup-email").value.trim();
+    const errorBox = document.getElementById("recup-correo-error");
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+        errorBox.textContent = "Ingrese un formato de correo electrónico válido.";
+        errorBox.style.display = "block";
+        return;
+    }
+
+    document.getElementById("recup-email-mostrado").textContent = email;
+    mostrarPasoRecuperacion("codigo");
+}
+
+function verificarCodigoRecuperacion(e) {
+    e.preventDefault();
+    const codigoIngresado = document.getElementById("recup-codigo").value.trim();
+    const errorBox = document.getElementById("recup-codigo-error");
+
+    if (codigoIngresado !== CODIGO_RECUPERACION_MOCK) {
+        errorBox.textContent = "El código ingresado es incorrecto. Verifique el código de prueba.";
+        errorBox.style.display = "block";
+        return;
+    }
+
+    mostrarPasoRecuperacion("nueva-clave");
+}
+
+function confirmarNuevaContrasena(e) {
+    e.preventDefault();
+    const nueva = document.getElementById("recup-nueva-pass").value;
+    const confirmar = document.getElementById("recup-confirmar-pass").value;
+    const errorBox = document.getElementById("recup-clave-error");
+
+    if (nueva.length < 6) {
+        errorBox.textContent = "La contraseña debe tener al menos 6 caracteres.";
+        errorBox.style.display = "block";
+        return;
+    }
+
+    if (nueva !== confirmar) {
+        errorBox.textContent = "Las contraseñas no coinciden.";
+        errorBox.style.display = "block";
+        return;
+    }
+
+    mostrarPasoRecuperacion("ingreso");
+    const exitoBox = document.getElementById("login-exito");
+    exitoBox.textContent = "Contraseña actualizada correctamente (simulación). Ya puede iniciar sesión.";
+    exitoBox.style.display = "block";
+    document.getElementById("usuario").focus();
+}
+
 function cerrarSesion() {
     localStorage.removeItem("vida_natural_user");
     usuarioActual = null;
@@ -111,11 +195,12 @@ function mostrarPanelPrincipal() {
 
     const esAdmin = usuarioActual.perfil === "ADMINISTRATIVO";
 
-    // Administrativo: Registrar Venta e Inventario de Productos
+    // Administrativo: Registrar Venta, Historial de Ventas, Inventario de Productos y Control de Stock Mínimo
     // Gerente: Control de Stock Mínimo y Reporte de Recaudación
     document.getElementById("nav-ventas").style.display = esAdmin ? "block" : "none";
+    document.getElementById("nav-historial-ventas").style.display = esAdmin ? "block" : "none";
     document.getElementById("nav-productos").style.display = esAdmin ? "block" : "none";
-    document.getElementById("nav-stock-bajo").style.display = esAdmin ? "none" : "block";
+    document.getElementById("nav-stock-bajo").style.display = "block";
     document.getElementById("nav-recaudacion").style.display = esAdmin ? "none" : "block";
 
     if (esAdmin) {
@@ -130,7 +215,7 @@ function mostrarPanelPrincipal() {
 // ============================================================
 function cambiarSeccion(seccion) {
     const esAdmin = usuarioActual && usuarioActual.perfil === "ADMINISTRATIVO";
-    const seccionesAdmin = ["ventas", "productos"];
+    const seccionesAdmin = ["ventas", "historial-ventas", "productos", "stock-bajo"];
     const seccionesGerente = ["stock-bajo", "recaudacion"];
 
     if (esAdmin && !seccionesAdmin.includes(seccion)) {
@@ -148,6 +233,7 @@ function cambiarSeccion(seccion) {
     if (navBtn) navBtn.classList.add("active");
 
     if (seccion === "ventas") cargarDatalistProductosVenta();
+    if (seccion === "historial-ventas") cargarHistorialVentasERP();
     if (seccion === "productos") cargarProductos();
     if (seccion === "stock-bajo") cargarStockBajo();
     if (seccion === "recaudacion") consultarRecaudacion();
@@ -389,6 +475,79 @@ function mostrarAlertaVenta(mensaje, tipo) {
 }
 
 // ============================================================
+// HISTORIAL DE VENTAS (ADMINISTRATIVO)
+// ============================================================
+async function cargarHistorialVentasERP() {
+    try {
+        const res = await fetch("/api/ventas");
+        listaVentasGlobal = await res.json();
+        renderizarHistorialVentas(listaVentasGlobal);
+    } catch (err) {
+        console.error("Error al cargar historial de ventas:", err);
+    }
+}
+
+function renderizarHistorialVentas(ventas) {
+    const tbody = document.getElementById("tbody-historial-erp");
+    tbody.innerHTML = "";
+    document.getElementById("historial-ventas-contador").textContent = `${ventas.length} ventas`;
+
+    if (!ventas || ventas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center">No se encontraron ventas registradas.</td></tr>`;
+        return;
+    }
+
+    ventas.forEach(v => {
+        const fechaFmt = v.fecha ? v.fecha.replace("T", " ").substring(0, 19) : "-";
+        const resumenItems = (v.detalles || [])
+            .map(d => `<code>${d.productoCodigo}</code> ${d.descripcion} (x${d.cantidad})`)
+            .join("<br>");
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><strong>#${v.id}</strong></td>
+            <td>${fechaFmt}</td>
+            <td>${resumenItems || "-"}</td>
+            <td><strong>$${v.importeTotal.toFixed(2)}</strong></td>
+            <td><span class="badge badge-success">${v.estado}</span></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function filtrarHistorialVentas() {
+    const txt = document.getElementById("historial-buscar-texto").value.toLowerCase().trim();
+    const desde = document.getElementById("historial-desde").value;
+    const hasta = document.getElementById("historial-hasta").value;
+
+    const filtradas = listaVentasGlobal.filter(v => {
+        let coincideTexto = true;
+        if (txt) {
+            coincideTexto = (v.detalles || []).some(d =>
+                (d.productoCodigo && d.productoCodigo.toLowerCase().includes(txt)) ||
+                (d.descripcion && d.descripcion.toLowerCase().includes(txt))
+            );
+        }
+        let coincideFecha = true;
+        if (v.fecha) {
+            const fechaVenta = v.fecha.substring(0, 10);
+            if (desde && fechaVenta < desde) coincideFecha = false;
+            if (hasta && fechaVenta > hasta) coincideFecha = false;
+        }
+        return coincideTexto && coincideFecha;
+    });
+
+    renderizarHistorialVentas(filtradas);
+}
+
+function limpiarFiltrosHistorial() {
+    document.getElementById("historial-buscar-texto").value = "";
+    document.getElementById("historial-desde").value = "";
+    document.getElementById("historial-hasta").value = "";
+    renderizarHistorialVentas(listaVentasGlobal);
+}
+
+// ============================================================
 // 3. INVENTARIO DE PRODUCTOS (ALTA, MODIFICACIÓN, BAJA Y REACTIVACIÓN)
 // ============================================================
 async function cargarProductos() {
@@ -569,7 +728,7 @@ async function reactivarProducto(codigo) {
 }
 
 // ============================================================
-// 4. CONTROL DE STOCK MÍNIMO (GERENTE)
+// 4. CONTROL DE STOCK MÍNIMO (ADMINISTRATIVO Y GERENTE)
 // ============================================================
 async function cargarStockBajo() {
     try {

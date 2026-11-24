@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.vidanatural.model.DetalleVenta;
 import com.vidanatural.model.EstadoVenta;
@@ -144,4 +146,60 @@ public class VentaDAO {
         }
         return 0.0;
     }
+/**
+     * Listado histórico de ventas con sus productos detallados.
+     */
+    public List<Venta> listarVentas() {
+        List<Venta> lista = new ArrayList<>();
+        String sqlVentas = "SELECT v.id, v.fecha, v.importe_total, v.estado, v.usuario_id " +
+                           "FROM venta v ORDER BY v.fecha DESC";
+
+        String sqlDetalles = "SELECT d.id, d.venta_id, d.producto_codigo, p.descripcion, d.cantidad, " +
+                             "p.precio_unitario, d.subtotal " +
+                             "FROM detalle_venta d " +
+                             "JOIN producto p ON d.producto_codigo = p.codigo " +
+                             "WHERE d.venta_id = ?";
+
+        try (Connection conn = ConexionBD.getConexion();
+             PreparedStatement stmtV = conn.prepareStatement(sqlVentas);
+             ResultSet rsV = stmtV.executeQuery()) {
+
+            while (rsV.next()) {
+                Venta v = new Venta(
+                    rsV.getInt("id"),
+                    rsV.getTimestamp("fecha").toLocalDateTime(),
+                    rsV.getDouble("importe_total"),
+                    EstadoVenta.valueOf(rsV.getString("estado")),
+                    rsV.getInt("usuario_id")
+                );
+
+                try (PreparedStatement stmtD = conn.prepareStatement(sqlDetalles)) {
+                    stmtD.setInt(1, v.getId());
+                    try (ResultSet rsD = stmtD.executeQuery()) {
+                        while (rsD.next()) {
+                            DetalleVenta d = new DetalleVenta(
+                                rsD.getInt("id"),
+                                rsD.getInt("venta_id"),
+                                rsD.getString("producto_codigo"),
+                                rsD.getInt("cantidad"),
+                                rsD.getDouble("subtotal")
+                            );
+                            com.vidanatural.model.Producto p = new com.vidanatural.model.Producto();
+                            p.setCodigo(rsD.getString("producto_codigo"));
+                            p.setDescripcion(rsD.getString("descripcion"));
+                            p.setPrecioUnitario(rsD.getDouble("precio_unitario"));
+                            d.setProducto(p);
+
+                            v.getDetalles().add(d);
+                        }
+                    }
+                }
+                lista.add(v);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al listar ventas: " + e.getMessage());
+        }
+        return lista;
+    }
+    
 }

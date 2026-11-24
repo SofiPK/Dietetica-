@@ -169,7 +169,7 @@ public class ServidorWeb {
     private class StockBajoHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            if (!verificarRolGerente(exchange)) return;
+            if (!verificarRolAdminOGerente(exchange)) return;
 
             List<Producto> lista = gestorProductos.listarStockBajo();
             StringBuilder sb = new StringBuilder("[");
@@ -186,6 +186,18 @@ public class ServidorWeb {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
             if (!verificarRolAdmin(exchange)) return;
+
+            if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+                List<Venta> ventas = gestorVentas.listarVentas();
+                StringBuilder sb = new StringBuilder("[");
+                for (int i = 0; i < ventas.size(); i++) {
+                    sb.append(ventaAJson(ventas.get(i)));
+                    if (i < ventas.size() - 1) sb.append(",");
+                }
+                sb.append("]");
+                responderJson(exchange, 200, sb.toString());
+                return;
+            }
 
             if ("POST".equalsIgnoreCase(exchange.getRequestMethod())) {
                 try {
@@ -269,6 +281,15 @@ public class ServidorWeb {
         return true;
     }
 
+    private boolean verificarRolAdminOGerente(HttpExchange exchange) throws IOException {
+        String perfil = exchange.getRequestHeaders().getFirst("X-User-Perfil");
+        if (!"ADMINISTRATIVO".equalsIgnoreCase(perfil) && !"GERENTE".equalsIgnoreCase(perfil)) {
+            responderJson(exchange, 403, "{\"error\":\"Acceso denegado: requiere perfil Administrativo o Gerente\"}");
+            return false;
+        }
+        return true;
+    }
+
     private void responderJson(HttpExchange exchange, int status, String json) throws IOException {
         byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
@@ -296,6 +317,26 @@ public class ServidorWeb {
             escaparJson(p.getCodigo()), escaparJson(p.getDescripcion()), p.getCategoria().name(),
             p.getPrecioUnitario(), p.getStockActual(), p.getStockMinimo(), p.isActivo()
         );
+    }
+
+    private String ventaAJson(Venta v) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format(Locale.US,
+            "{\"id\":%d,\"fecha\":\"%s\",\"importeTotal\":%.2f,\"estado\":\"%s\",\"usuarioId\":%d,\"detalles\":[",
+            v.getId(), v.getFecha().toString(), v.getImporteTotal(), v.getEstado().name(), v.getUsuarioId()
+        ));
+        for (int i = 0; i < v.getDetalles().size(); i++) {
+            DetalleVenta d = v.getDetalles().get(i);
+            String desc = (d.getProducto() != null) ? d.getProducto().getDescripcion() : "";
+            double precioU = (d.getProducto() != null) ? d.getProducto().getPrecioUnitario() : 0.0;
+            sb.append(String.format(Locale.US,
+                "{\"id\":%d,\"productoCodigo\":\"%s\",\"descripcion\":\"%s\",\"cantidad\":%d,\"precioUnitario\":%.2f,\"subtotal\":%.2f}",
+                d.getId(), escaparJson(d.getProductoCodigo()), escaparJson(desc), d.getCantidad(), precioU, d.getSubtotal()
+            ));
+            if (i < v.getDetalles().size() - 1) sb.append(",");
+        }
+        sb.append("]}");
+        return sb.toString();
     }
 
     private Producto jsonAProducto(String json) {
