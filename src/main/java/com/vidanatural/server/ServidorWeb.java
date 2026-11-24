@@ -1,14 +1,9 @@
 package com.vidanatural.server;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-import com.vidanatural.model.*;
-import com.vidanatural.service.GestorProductos;
-import com.vidanatural.service.GestorVentas;
-import com.vidanatural.service.SistemaLogin;
-
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -16,7 +11,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import com.vidanatural.model.Categoria;
+import com.vidanatural.model.DetalleVenta;
+import com.vidanatural.model.Producto;
+import com.vidanatural.model.Usuario;
+import com.vidanatural.model.Venta;
+import com.vidanatural.service.GestorProductos;
+import com.vidanatural.service.GestorVentas;
+import com.vidanatural.service.SistemaLogin;
 
 /**
  * Servidor Web embebido en Java puro usando com.sun.net.httpserver.
@@ -45,7 +55,7 @@ public class ServidorWeb {
         server.createContext("/api/ventas", new VentasHandler());
         server.createContext("/api/ventas/recaudado", new RecaudadoHandler());
 
-        // Nuevos Endpoints: Clientes, Proveedores y Caja
+        // Endpoints: Clientes, Proveedores y Caja
         server.createContext("/api/clientes", new ClientesHandler());
         server.createContext("/api/proveedores", new ProveedoresHandler());
         server.createContext("/api/caja/movimientos", new CajaMovimientosHandler());
@@ -102,6 +112,8 @@ public class ServidorWeb {
     private class BuscarProductoHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
+            if (!verificarRolAdmin(exchange)) return;
+
             Map<String, String> query = parseQuery(exchange.getRequestURI().getQuery());
             String codigo = query.get("codigo");
             Producto p = gestorProductos.buscarPorCodigo(codigo);
@@ -116,6 +128,8 @@ public class ServidorWeb {
     private class ProductosHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
+            if (!verificarRolAdmin(exchange)) return;
+
             String metodo = exchange.getRequestMethod().toUpperCase();
             switch (metodo) {
                 case "GET":
@@ -179,6 +193,8 @@ public class ServidorWeb {
     private class VentasHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
+            if (!verificarRolAdmin(exchange)) return;
+
             if ("GET".equalsIgnoreCase(exchange.getRequestMethod())) {
                 List<Venta> ventas = gestorVentas.listarVentas();
                 StringBuilder sb = new StringBuilder("[");
@@ -210,6 +226,8 @@ public class ServidorWeb {
     private class RecaudadoHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
+            if (!verificarRolAdmin(exchange)) return;
+
             Map<String, String> query = parseQuery(exchange.getRequestURI().getQuery());
             String desdeStr = query.get("desde");
             String hastaStr = query.get("hasta");
@@ -225,6 +243,8 @@ public class ServidorWeb {
     private class ClientesHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
+            if (!verificarRolAdmin(exchange)) return;
+
             String method = exchange.getRequestMethod().toUpperCase();
             if ("GET".equals(method)) {
                 List<com.vidanatural.model.Cliente> clientes = clienteDAO.listarTodos();
@@ -263,6 +283,8 @@ public class ServidorWeb {
     private class ProveedoresHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
+            if (!verificarRolAdmin(exchange)) return;
+
             String method = exchange.getRequestMethod().toUpperCase();
             if ("GET".equals(method)) {
                 List<com.vidanatural.model.Proveedor> lista = proveedorDAO.listarTodos();
@@ -343,6 +365,8 @@ public class ServidorWeb {
     private class CajaEgresoHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
+            if (!verificarRolAdmin(exchange)) return;
+
             if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
                 responderJson(exchange, 405, "{\"error\":\"Método no permitido\"}");
                 return;
@@ -392,6 +416,15 @@ public class ServidorWeb {
     // ============================================================
     // UTILIDADES JSON Y HTTP
     // ============================================================
+    private boolean verificarRolAdmin(HttpExchange exchange) throws IOException {
+        String perfil = exchange.getRequestHeaders().getFirst("X-User-Perfil");
+        if (!"ADMINISTRATIVO".equalsIgnoreCase(perfil)) {
+            responderJson(exchange, 403, "{\"error\":\"Acceso denegado: acción exclusiva del perfil Administrativo\"}");
+            return false;
+        }
+        return true;
+    }
+
     private void responderJson(HttpExchange exchange, int status, String json) throws IOException {
         byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");

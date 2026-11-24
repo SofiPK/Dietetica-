@@ -8,35 +8,77 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos específicos para el Login con imagen de fondo y header blanco */
+        #vista-login {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: linear-gradient(rgba(15, 23, 42, 0.45), rgba(15, 23, 42, 0.45)), url('login-bg.jfif');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .login-top-header {
+            background-color: #ffffff;
+            width: 100%;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-sizing: border-box;
+        }
+        .login-top-header-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #15803d;
+            letter-spacing: -0.02em;
+        }
+        .login-center-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+        #vista-login .login-card {
+            background: rgba(255, 255, 255, 0.97);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
+        }
+        .badge-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+    </style>
 </head>
 <body>
 
     <!-- PANTALLA 1: LOGIN -->
     <div id="vista-login" class="login-wrapper">
-        <div class="login-card">
-            <div class="brand">
-                <h1>Vida Natural</h1>
-                <p>Dietética Comercial — Sistema de Gestión</p>
-            </div>
+        <header class="login-top-header">
+            <span class="login-top-header-title">Vida Natural</span>
+        </header>
 
-            <div id="login-error" class="alert alert-error" style="display:none;"></div>
-
-            <form id="form-login" onsubmit="iniciarSesion(event)">
-                <div class="form-group">
-                    <label for="usuario">Nombre de Usuario</label>
-                    <input type="text" id="usuario" placeholder="Ej: admin01 o gerente" required autofocus>
+        <div class="login-center-container">
+            <div class="login-card">
+                <div class="brand">
+                    <h1>Bienvenido</h1>
                 </div>
-                <div class="form-group">
-                    <label for="contrasena">Contraseña</label>
-                    <input type="password" id="contrasena" placeholder="Contraseña de acceso" required>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block">Ingresar al Sistema</button>
-            </form>
 
-            <div class="login-demo-help">
-                <p><strong>Cuentas disponibles:</strong></p>
-                <p>Administrativo: <code>admin01</code> / <code>admin123</code></p>
-                <p>Gerente: <code>gerente</code> / <code>gerente123</code></p>
+                <div id="login-error" class="alert alert-error" style="display:none;"></div>
+
+                <form id="form-login" onsubmit="iniciarSesion(event)">
+                    <div class="form-group">
+                        <label for="usuario">Nombre de Usuario</label>
+                        <input type="text" id="usuario" placeholder="Ingrese su usuario" required autofocus>
+                    </div>
+                    <div class="form-group">
+                        <label for="contrasena">Contraseña</label>
+                        <input type="password" id="contrasena" placeholder="Ingrese su contraseña" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Ingresar al Sistema</button>
+                </form>
             </div>
         </div>
     </div>
@@ -57,7 +99,6 @@
             </div>
 
             <div class="header-right">
-                <!-- Dropdown de Usuario -->
                 <div class="user-dropdown-wrapper">
                     <button class="user-dropdown-btn" onclick="toggleUserMenu()">
                         <span id="header-user-name" class="user-name">Usuario</span>
@@ -72,10 +113,9 @@
         </header>
 
         <div class="app-body">
-            <!-- BARRA LATERAL (ESTILO ERP PROFESIONAL) -->
+            <!-- BARRA LATERAL -->
             <aside class="sidebar" id="app-sidebar">
                 <nav class="sidebar-nav">
-                    <!-- Acciones del menú -->
                     <button class="nav-item active" id="nav-ventas" onclick="cambiarSeccion('ventas')">
                         Registrar Venta
                     </button>
@@ -95,7 +135,7 @@
                         Proveedores
                     </button>
                     <button class="nav-item" id="nav-caja" onclick="cambiarSeccion('caja')">
-                        Caja y Movimientos
+                        Caja Diaria y Movimientos
                     </button>
                     <button class="nav-item" id="nav-recaudacion" onclick="cambiarSeccion('recaudacion')">
                         Reporte de Recaudación
@@ -106,30 +146,29 @@
             <!-- CONTENIDO PRINCIPAL -->
             <main class="main-content">
                 
-                <!-- SECCIÓN 1: REGISTRAR VENTA (Administrativo) -->
+                <!-- SECCIÓN 1: REGISTRAR VENTA -->
                 <section id="seccion-ventas" class="seccion-view">
                     <header class="section-heading">
                         <h2>Registrar Venta</h2>
-                        <p>Incorporación de productos por código, validación de stock y cálculo de importes.</p>
+                        <p>Ingrese el código o nombre del producto y la cantidad solicitada para validar stock e incorporar a la factura.</p>
                     </header>
 
                     <div class="grid-venta">
-                        <!-- Carga de Producto -->
                         <div class="card">
-                            <h3 class="card-title">Agregar Producto a la Venta</h3>
+                            <h3 class="card-title">Incorporar Producto a la Venta</h3>
                             <div id="venta-alerta" class="alert" style="display:none;"></div>
 
                             <div class="form-row">
                                 <div class="form-group flex-2">
-                                    <label for="venta-codigo">Código de Producto</label>
-                                    <input type="text" id="venta-codigo" placeholder="Ej: AV001" onkeydown="if(event.key==='Enter') buscarProductoParaVenta()">
+                                    <label for="venta-codigo">Código o Nombre del Producto</label>
+                                    <input type="text" id="venta-codigo" list="datalist-productos-venta" autocomplete="off" placeholder="Ej: AV001 o Avena..." oninput="seleccionarDesdeDatalistVenta()" onkeydown="if(event.key==='Enter'){ event.preventDefault(); buscarProductoParaVenta(); }">
+                                    <datalist id="datalist-productos-venta"></datalist>
                                 </div>
                                 <div class="form-group align-end">
-                                    <button type="button" class="btn btn-secondary" onclick="buscarProductoParaVenta()">Buscar Código</button>
+                                    <button type="button" class="btn btn-secondary" onclick="buscarProductoParaVenta()">Verificar Stock</button>
                                 </div>
                             </div>
 
-                            <!-- Ficha de Producto Encontrado -->
                             <div id="venta-info-prod" class="info-box" style="display:none;">
                                 <h4 id="vip-desc">-</h4>
                                 <div class="info-grid">
@@ -143,7 +182,7 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="venta-cantidad">Cantidad Solicitada</label>
-                                    <input type="number" id="venta-cantidad" min="1" value="1">
+                                    <input type="number" id="venta-cantidad" min="1" step="1" value="1" onkeydown="if(event.key==='Enter'){ event.preventDefault(); agregarItemVenta(); }">
                                 </div>
                                 <div class="form-group align-end">
                                     <button type="button" class="btn btn-primary" onclick="agregarItemVenta()">Incorporar a la Venta</button>
@@ -151,7 +190,6 @@
                             </div>
                         </div>
 
-                        <!-- Carrito / Detalle de la Venta actual -->
                         <div class="card">
                             <h3 class="card-title">Detalle de la Venta en Curso</h3>
                             <div class="table-responsive">
@@ -173,7 +211,7 @@
                             </div>
 
                             <div class="total-bar">
-                                <span class="total-label">Total a Cobrar:</span>
+                                <span class="total-label">Importe Total de la Venta:</span>
                                 <span class="total-monto" id="venta-total">$0.00</span>
                             </div>
 
@@ -184,14 +222,13 @@
                     </div>
                 </section>
 
-                <!-- SECCIÓN 2: HISTORIAL DE VENTAS (ESTILO ERP DE LA FOTO) -->
+                <!-- SECCIÓN 2: HISTORIAL DE VENTAS -->
                 <section id="seccion-historial-ventas" class="seccion-view" style="display:none;">
                     <div class="erp-section-header">
                         <h2>HISTORIAL DE VENTAS</h2>
                         <span class="erp-counter-badge" id="historial-ventas-contador">0 ventas</span>
                     </div>
 
-                    <!-- Panel de Filtros -->
                     <div class="card erp-filter-card">
                         <div class="filter-header">
                             <span class="filter-title">FILTROS DE BÚSQUEDA</span>
@@ -213,7 +250,6 @@
                         </div>
                     </div>
 
-                    <!-- Tarjetas de Métricas Resumen -->
                     <div class="metrics-row">
                         <div class="metric-card">
                             <span class="metric-label">TOTAL VENDIDO</span>
@@ -225,7 +261,6 @@
                         </div>
                     </div>
 
-                    <!-- Tabla de Ventas con Acordeón de Productos -->
                     <div class="card">
                         <div class="table-responsive">
                             <table class="table erp-table">
@@ -246,12 +281,12 @@
                     </div>
                 </section>
 
-                <!-- SECCIÓN 3: INVENTARIO DE PRODUCTOS (Administrativo) -->
+                <!-- SECCIÓN 3: INVENTARIO DE PRODUCTOS -->
                 <section id="seccion-productos" class="seccion-view" style="display:none;">
                     <header class="section-heading flex-between">
                         <div>
                             <h2>Inventario de Productos</h2>
-                            <p>Administración del catálogo, altas, modificaciones y bajas lógicas.</p>
+                            <p>Administración del catálogo, altas, modificaciones, bajas lógicas y reactivación.</p>
                         </div>
                         <button class="btn btn-primary" onclick="abrirModalProducto()">+ Registrar Nuevo Producto</button>
                     </header>
@@ -283,7 +318,7 @@
                     </div>
                 </section>
 
-                <!-- SECCIÓN 4: CONTROL DE STOCK MÍNIMO (Gerente y Administrativo) -->
+                <!-- SECCIÓN 4: CONTROL DE STOCK MÍNIMO -->
                 <section id="seccion-stock-bajo" class="seccion-view" style="display:none;">
                     <header class="section-heading">
                         <h2>Control de Stock Mínimo</h2>
@@ -312,7 +347,7 @@
                     </div>
                 </section>
 
-                <!-- SECCIÓN 5: REPORTE DE RECAUDACIÓN (Gerente) -->
+                <!-- SECCIÓN 5: REPORTE DE RECAUDACIÓN -->
                 <section id="seccion-recaudacion" class="seccion-view" style="display:none;">
                     <header class="section-heading">
                         <h2>Reporte de Recaudación</h2>
@@ -405,44 +440,64 @@
                     </div>
                 </section>
 
-                <!-- SECCIÓN 8: CAJA Y MOVIMIENTOS -->
+                <!-- SECCIÓN 8: CAJA DIARIA Y MOVIMIENTOS -->
                 <section id="seccion-caja" class="seccion-view" style="display:none;">
                     <header class="section-heading flex-between">
                         <div>
-                            <h2 id="caja-titulo-vista">Caja y Movimientos</h2>
-                            <p id="caja-subtitulo-vista">Arqueo de ingresos por ventas y control de movimientos.</p>
+                            <h2 id="caja-titulo-vista">Caja Diaria y Movimientos</h2>
+                            <p id="caja-subtitulo-vista">Arqueo diario de caja, ingresos por ventas y cobros a clientes, egresos y cierre de jornada.</p>
                         </div>
-                        <div id="caja-acciones-admin" style="display:none;">
-                            <button class="btn btn-primary" onclick="abrirModalEgresoCaja()">+ Registrar Egreso / Pago</button>
+                        <div id="caja-acciones-admin" style="display:none; gap: 0.6rem; flex-wrap: wrap;">
+                            <button class="btn btn-success" onclick="abrirModalIngresoCaja()">+ Registrar Ingreso / Cobro</button>
+                            <button class="btn btn-outline-danger" onclick="abrirModalEgresoCaja()">- Registrar Egreso / Pago</button>
+                            <button class="btn btn-primary" id="btn-cierre-caja-diario" onclick="realizarCierreCajaDiario()">Cerrar Caja del Día</button>
                         </div>
                     </header>
 
-                    <!-- Tarjetas de Saldo y Resumen de Caja -->
+                    <!-- Estado de Jornada / Cierre Diario -->
+                    <div class="card" style="margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <span style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600;">Jornada Comercial (<span id="caja-fecha-hoy">-</span>)</span>
+                            <div style="margin-top: 0.25rem; display: flex; align-items: center; gap: 0.75rem;">
+                                <span id="caja-estado-badge" class="badge badge-success">CAJA ABIERTA</span>
+                                <span id="caja-ultimo-cierre-info" style="font-size: 0.88rem; color: var(--text-secondary);">Sin cierre registrado en el día de hoy.</span>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                            <strong>Regla de Control:</strong> El saldo disponible no puede ser negativo y el cierre se efectúa diariamente al finalizar la atención al público.
+                        </div>
+                    </div>
+
                     <div class="metrics-row">
                         <div class="metric-card">
-                            <span class="metric-label">TOTAL INGRESOS (VENTAS)</span>
+                            <span class="metric-label">INGRESOS DEL DÍA (VENTAS Y COBROS)</span>
                             <span class="metric-value text-primary" id="caja-metric-ingresos">$ 0,00</span>
                         </div>
                         <div class="metric-card" id="caja-card-egresos">
-                            <span class="metric-label">TOTAL EGRESOS (PAGOS)</span>
+                            <span class="metric-label">EGRESOS DEL DÍA (PAGOS Y GASTOS)</span>
                             <span class="metric-value text-danger" id="caja-metric-egresos">$ 0,00</span>
                         </div>
                         <div class="metric-card">
-                            <span class="metric-label" id="caja-label-saldo">SALDO ACTUAL EN CAJA</span>
+                            <span class="metric-label" id="caja-label-saldo">SALDO DISPONIBLE EN CAJA</span>
                             <span class="metric-value text-primary" id="caja-metric-saldo">$ 0,00</span>
                         </div>
                     </div>
 
-                    <!-- Tabla de Movimientos de Caja -->
                     <div class="card">
-                        <h3 class="card-title">Movimientos Registrados</h3>
+                        <div class="flex-between" style="margin-bottom: 1rem;">
+                            <h3 class="card-title" style="margin: 0;">Movimientos de Caja</h3>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <label for="caja-filtro-fecha" style="margin: 0; font-size: 0.85rem;">Fecha:</label>
+                                <input type="date" id="caja-filtro-fecha" onchange="cargarCaja()" style="padding: 0.35rem 0.6rem; font-size: 0.85rem;">
+                            </div>
+                        </div>
                         <div class="table-responsive">
                             <table class="table">
                                 <thead>
                                     <tr>
                                         <th>Fecha y Hora</th>
                                         <th>Tipo de Movimiento</th>
-                                        <th>Concepto</th>
+                                        <th>Concepto / Cliente</th>
                                         <th class="text-right">Monto</th>
                                         <th>Usuario</th>
                                     </tr>
@@ -461,74 +516,65 @@
 
     <!-- MODAL: FORMATO REMITO COMERCIAL -->
     <div id="modal-remito" class="modal-backdrop" style="display:none;">
-        <div class="modal-card modal-remito-card">
+        <div class="modal-card modal-remito-card" style="max-width: 780px; width: 95%;">
             <header class="modal-header">
                 <h3>Comprobante de Venta</h3>
                 <button class="btn-close" onclick="cerrarModalRemito()">&times;</button>
             </header>
             
-            <div class="remito-paper" id="remito-printable">
-                <!-- Encabezado Remito Comercial -->
-                <div class="remito-header-grid">
-                    <div class="remito-col-empresa">
-                        <h2 class="remito-empresa-nombre">VIDA NATURAL</h2>
-                        <p class="remito-empresa-rubro">Dietética y Almacén Natural</p>
-                        <p class="remito-empresa-dir">Venta Minorista de Alimentos Saludables</p>
+            <div class="remito-paper" id="remito-printable" style="padding: 1.5rem; background: #fff; border: 1px solid #d1d5db; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; border-bottom: 2px solid #1f2937; padding-bottom: 1rem; margin-bottom: 1rem;">
+                    <div style="flex: 1;">
+                        <h2 style="margin: 0; color: #15803d; font-size: 1.4rem;">VIDA NATURAL</h2>
+                        <p style="margin: 0.2rem 0; font-weight: 600; font-size: 0.9rem;">Dietética y Almacén Natural</p>
+                        <p style="margin: 0; color: #6b7280; font-size: 0.8rem;">Venta Minorista de Alimentos Saludables</p>
                     </div>
 
-                    <div class="remito-col-letra">
-                        <div class="remito-box-letra">
-                            <span class="letra-r">R</span>
-                            <span class="letra-sub">DOCUMENTO NO FISCAL</span>
+                    <div style="text-align: center;">
+                        <div style="border: 2px solid #1f2937; padding: 0.35rem 0.75rem; border-radius: 4px; display: inline-block;">
+                            <span style="display: block; font-size: 1.4rem; font-weight: 700; line-height: 1.1;">R</span>
+                            <span style="display: block; font-size: 0.55rem; font-weight: 600; letter-spacing: 0.5px;">DOCUMENTO NO FISCAL</span>
                         </div>
                     </div>
 
-                    <div class="remito-col-datos">
-                        <h3 class="remito-doc-titulo">REMITO DE ENTREGA</h3>
-                        <p><strong>N° Operación:</strong> <span id="remito-numero">#0001</span></p>
-                        <p><strong>Fecha y Hora:</strong> <span id="remito-fecha">-</span></p>
-                        <p><strong>Atendido por:</strong> <span id="remito-vendedor">-</span></p>
+                    <div style="flex: 1; text-align: right; font-size: 0.85rem;">
+                        <h3 style="margin: 0 0 0.35rem 0; font-size: 1rem;">REMITO DE ENTREGA</h3>
+                        <p style="margin: 0.15rem 0;"><strong>N° Operación:</strong> <span id="remito-numero">#0001</span></p>
+                        <p style="margin: 0.15rem 0;"><strong>Fecha y Hora:</strong> <span id="remito-fecha">-</span></p>
+                        <p style="margin: 0.15rem 0;"><strong>Atendido por:</strong> <span id="remito-vendedor">-</span></p>
                     </div>
                 </div>
 
-                <!-- Datos del Cliente / Entrega -->
-                <div class="remito-cliente-banner">
-                    <div class="form-row">
-                        <div><strong>Cliente:</strong> Consumidor Final (Venta Mostrador)</div>
-                        <div><strong>Condición de Venta:</strong> Contado / Efectivo</div>
-                    </div>
+                <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0.65rem 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; font-size: 0.85rem;">
+                    <div><strong>Cliente:</strong> Consumidor Final (Venta Mostrador)</div>
+                    <div><strong>Condición de Venta:</strong> Contado / Efectivo</div>
                 </div>
 
-                <!-- Tabla de Artículos -->
-                <div class="table-responsive">
-                    <table class="table remito-items-table">
+                <div style="overflow-x: visible; margin-bottom: 1.25rem;">
+                    <table class="table" style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
                         <thead>
                             <tr>
-                                <th>Código</th>
-                                <th>Descripción del Artículo</th>
-                                <th class="text-center">Cant.</th>
-                                <th class="text-right">Precio Unit.</th>
-                                <th class="text-right">Subtotal</th>
+                                <th style="width: 14%;">Código</th>
+                                <th style="width: 40%;">Descripción del Artículo</th>
+                                <th style="width: 10%; text-align: center;">Cant.</th>
+                                <th style="width: 18%; text-align: right; white-space: nowrap;">Precio Unit.</th>
+                                <th style="width: 18%; text-align: right; white-space: nowrap;">Subtotal</th>
                             </tr>
                         </thead>
                         <tbody id="remito-tbody-items">
-                            <!-- Filas generadas dinámicamente -->
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Pie del Remito y Totales -->
-                <div class="remito-footer-grid">
-                    <div class="remito-firmas-box">
-                        <div class="firma-linea">
-                            <span>Firma y Aclaración de Recepción</span>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #d1d5db; padding-top: 1.25rem; gap: 1.5rem;">
+                    <div style="width: 45%; text-align: center;">
+                        <div style="border-top: 1px dashed #6b7280; padding-top: 0.35rem; font-size: 0.78rem; color: #4b5563;">
+                            Firma y Aclaración de Recepción
                         </div>
                     </div>
-                    <div class="remito-totales-box">
-                        <div class="remito-total-row">
-                            <span class="remito-total-txt">TOTAL PAGADO:</span>
-                            <strong class="remito-total-val" id="remito-total">$ 0,00</strong>
-                        </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 0.95rem; font-weight: 600; color: #374151; margin-right: 0.75rem;">TOTAL PAGADO:</span>
+                        <strong id="remito-total" style="font-size: 1.45rem; color: #15803d; white-space: nowrap;">$ 0,00</strong>
                     </div>
                 </div>
             </div>
@@ -574,11 +620,11 @@
                     </div>
                     <div class="form-group">
                         <label for="prod-stock-act">Stock Actual</label>
-                        <input type="number" id="prod-stock-act" min="0" required value="0">
+                        <input type="number" id="prod-stock-act" min="0" step="1" required value="0">
                     </div>
                     <div class="form-group">
                         <label for="prod-stock-min">Stock Mínimo Permitido</label>
-                        <input type="number" id="prod-stock-min" min="0" required value="0">
+                        <input type="number" id="prod-stock-min" min="0" step="1" required value="0">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -608,12 +654,12 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="cli-telefono">Teléfono / WhatsApp (para promociones)</label>
-                    <input type="text" id="cli-telefono" required placeholder="Ej: 11-5544-3322">
+                    <label for="cli-telefono">Teléfono / WhatsApp (solo números)</label>
+                    <input type="tel" id="cli-telefono" inputmode="numeric" pattern="[0-9]{7,15}" maxlength="15" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required placeholder="Ej: 2915544332">
                 </div>
                 <div class="form-group">
                     <label for="cli-email">Email</label>
-                    <input type="email" id="cli-email" placeholder="correo@ejemplo.com">
+                    <input type="email" id="cli-email" placeholder="correo@gmail.com">
                 </div>
                 <div class="form-group" style="flex-direction:row; align-items:center; gap:0.5rem; margin-top:0.5rem;">
                     <input type="checkbox" id="cli-promociones" checked style="width:auto;">
@@ -636,69 +682,3 @@
             </header>
             <form id="form-proveedor" onsubmit="guardarProveedor(event)">
                 <div class="form-group">
-                    <label for="prov-razon">Razón Social / Distribuidora</label>
-                    <input type="text" id="prov-razon" required placeholder="Ej: Distribuidora Granos & Cía">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="prov-cuit">CUIT</label>
-                        <input type="text" id="prov-cuit" required placeholder="30-XXXXXXXX-X">
-                    </div>
-                    <div class="form-group">
-                        <label for="prov-rubro">Rubro Principal</label>
-                        <input type="text" id="prov-rubro" required placeholder="Ej: Frutos secos y legumbres">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="prov-telefono">Teléfono</label>
-                        <input type="text" id="prov-telefono" required placeholder="011-4455-6677">
-                    </div>
-                    <div class="form-group">
-                        <label for="prov-email">Email</label>
-                        <input type="email" id="prov-email" placeholder="ventas@proveedor.com">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="cerrarModalProveedor()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Proveedor</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: REGISTRAR EGRESO DE CAJA (GERENTE) -->
-    <div id="modal-egreso-caja" class="modal-backdrop" style="display:none;">
-        <div class="modal-card">
-            <header class="modal-header">
-                <h3>Registrar Egreso de Caja</h3>
-                <button class="btn-close" onclick="cerrarModalEgresoCaja()">&times;</button>
-            </header>
-            <form id="form-egreso-caja" onsubmit="guardarEgresoCaja(event)">
-                <div class="form-group">
-                    <label for="egreso-tipo">Tipo de Egreso</label>
-                    <select id="egreso-tipo" required>
-                        <option value="EGRESO_PROVEEDOR">Pago a Proveedores</option>
-                        <option value="EGRESO_IMPUESTOS">Pago de Impuestos y Servicios (Luz, Alquiler, AFIP)</option>
-                        <option value="EGRESO_GASTOS">Gastos Operativos / Insumos de Tienda</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="egreso-concepto">Concepto / Detalle del Comprobante</label>
-                    <input type="text" id="egreso-concepto" required placeholder="Ej: Pago factura Molinos del Sur N° 458">
-                </div>
-                <div class="form-group">
-                    <label for="egreso-monto">Monto del Egreso ($)</label>
-                    <input type="number" id="egreso-monto" step="0.01" min="0.01" required placeholder="0.00">
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="cerrarModalEgresoCaja()">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Registrar Salida de Dinero</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script src="app.js"></script>
-</body>
-</html>
