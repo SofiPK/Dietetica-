@@ -1,12 +1,12 @@
 package com.vidanatural.dao;
 
-import com.vidanatural.model.Perfil;
-import com.vidanatural.model.Usuario;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import com.vidanatural.model.Perfil;
+import com.vidanatural.model.Usuario;
 
 public class UsuarioDAO {
 

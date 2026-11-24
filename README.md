@@ -54,8 +54,9 @@ Cuenta con acceso completo a todas las funcionalidades operativas y administrati
 * **Reporte de Recaudación:** Cálculo del total facturado con filtrado por rango de fechas.
 
 ### 2. Perfil Gerente (Control Crítico y Caja)
-Cuenta con acceso focalizado en el control de reposición y arqueo financiero:
+Cuenta con acceso focalizado en el control de reposición, la recaudación y el arqueo financiero:
 * **Control de Stock Mínimo:** Consulta exclusiva de productos cuyo stock actual es inferior o igual al límite mínimo permitido para planificar compras.
+* **Reporte de Recaudación:** Consulta de cuánto se vendió, con filtrado opcional por rango de fechas (solo lectura).
 * **Caja y Movimientos:** Visualización de ingresos, registro de egresos (proveedores, impuestos, gastos operativos) y consulta del saldo neto en caja.
 ---
 
@@ -141,4 +142,4 @@ erDiagram
 | Rol | Nombre de Usuario | Contraseña | Vistas Habilitadas |
 | :--- | :--- | :--- | :--- |
 | **Administrativo** | `admin01` | `admin123` | Acceso total (Ventas, Historial, Productos, Stock Mínimo, Clientes, Proveedores, Caja y Recaudación). |
-| **Gerente** | `gerente` | `gerente123` | Control de Stock Mínimo y Caja / Movimientos. |
+| **Gerente** | `gerente` | `gerente123` | Control de Stock Mínimo, Reporte de Recaudación y Caja / Movimientos. |

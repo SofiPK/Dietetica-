@@ -12,6 +12,9 @@
         /* Estilos específicos para el Login con imagen de fondo y header blanco */
         #vista-login {
             min-height: 100vh;
+            width: 100%;
+            margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
             background-image: linear-gradient(rgba(15, 23, 42, 0.45), rgba(15, 23, 42, 0.45)), url('login-bg.jfif');
@@ -22,6 +25,7 @@
         .login-top-header {
             background-color: #ffffff;
             width: 100%;
+            margin: 0;
             padding: 1rem 2rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             display: flex;
@@ -44,6 +48,8 @@
         }
         #vista-login .login-card {
             background: rgba(255, 255, 255, 0.97);
+            max-width: 460px;
+            padding: 3rem 2.75rem;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
         }
         .badge-warning {
@@ -70,14 +76,14 @@
 
                 <form id="form-login" onsubmit="iniciarSesion(event)">
                     <div class="form-group">
-                        <label for="usuario">Nombre de Usuario</label>
+                        <label for="usuario">Usuario</label>
                         <input type="text" id="usuario" placeholder="Ingrese su usuario" required autofocus>
                     </div>
                     <div class="form-group">
                         <label for="contrasena">Contraseña</label>
                         <input type="password" id="contrasena" placeholder="Ingrese su contraseña" required>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block">Ingresar al Sistema</button>
+                    <button type="submit" class="btn btn-primary btn-block">Ingresar</button>
                 </form>
             </div>
         </div>
@@ -463,9 +469,6 @@
                                 <span id="caja-ultimo-cierre-info" style="font-size: 0.88rem; color: var(--text-secondary);">Sin cierre registrado en el día de hoy.</span>
                             </div>
                         </div>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary);">
-                            <strong>Regla de Control:</strong> El saldo disponible no puede ser negativo y el cierre se efectúa diariamente al finalizar la atención al público.
-                        </div>
                     </div>
 
                     <div class="metrics-row">
@@ -516,66 +519,95 @@
 
     <!-- MODAL: FORMATO REMITO COMERCIAL -->
     <div id="modal-remito" class="modal-backdrop" style="display:none;">
-        <div class="modal-card modal-remito-card" style="max-width: 780px; width: 95%;">
+        <div class="modal-card modal-remito-card">
             <header class="modal-header">
                 <h3>Comprobante de Venta</h3>
                 <button class="btn-close" onclick="cerrarModalRemito()">&times;</button>
             </header>
-            
-            <div class="remito-paper" id="remito-printable" style="padding: 1.5rem; background: #fff; border: 1px solid #d1d5db; border-radius: 8px;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; border-bottom: 2px solid #1f2937; padding-bottom: 1rem; margin-bottom: 1rem;">
-                    <div style="flex: 1;">
-                        <h2 style="margin: 0; color: #15803d; font-size: 1.4rem;">VIDA NATURAL</h2>
-                        <p style="margin: 0.2rem 0; font-weight: 600; font-size: 0.9rem;">Dietética y Almacén Natural</p>
-                        <p style="margin: 0; color: #6b7280; font-size: 0.8rem;">Venta Minorista de Alimentos Saludables</p>
-                    </div>
 
-                    <div style="text-align: center;">
-                        <div style="border: 2px solid #1f2937; padding: 0.35rem 0.75rem; border-radius: 4px; display: inline-block;">
-                            <span style="display: block; font-size: 1.4rem; font-weight: 700; line-height: 1.1;">R</span>
-                            <span style="display: block; font-size: 0.55rem; font-weight: 600; letter-spacing: 0.5px;">DOCUMENTO NO FISCAL</span>
+            <div class="remito-scroll">
+                <div class="remito-paper" id="remito-printable">
+                    <div class="remito-original">ORIGINAL</div>
+
+                    <!-- Cabecera -->
+                    <div class="remito-cab">
+                        <div class="remito-cab-izq">
+                            <div class="remito-empresa-nombre">VIDA NATURAL</div>
+                            <div class="remito-empresa-rubro">Dietética y Almacén Natural</div>
+                            <div class="remito-empresa-dir">Venta Minorista de Alimentos Saludables</div>
+                            <div class="remito-empresa-dir">Domicilio: Av. Alem 1234 - Bahía Blanca (B8000)</div>
+                            <div class="remito-empresa-dir">Tel.: (0291) 400-0000</div>
+                            <div class="remito-empresa-dir"><strong>IVA Responsable Monotributo</strong></div>
+                        </div>
+
+                        <div class="remito-cab-centro">
+                            <div class="remito-box-letra">
+                                <span class="letra-r">R</span>
+                                <span class="letra-sub">Documento<br>no fiscal</span>
+                            </div>
+                        </div>
+
+                        <div class="remito-cab-der">
+                            <div class="remito-doc-titulo">REMITO</div>
+                            <div class="remito-doc-numero">N° <span id="remito-numero">0001-00000000</span></div>
+                            <div class="remito-dato"><strong>Fecha:</strong> <span id="remito-fecha">-</span></div>
+                            <div class="remito-dato"><strong>Hora:</strong> <span id="remito-hora">-</span></div>
+                            <div class="remito-dato"><strong>C.U.I.T.:</strong> 20-00000000-0</div>
+                            <div class="remito-dato"><strong>Ing. Brutos:</strong> 000-000000-0</div>
+                            <div class="remito-dato"><strong>Inicio de Act.:</strong> 01/01/2020</div>
                         </div>
                     </div>
 
-                    <div style="flex: 1; text-align: right; font-size: 0.85rem;">
-                        <h3 style="margin: 0 0 0.35rem 0; font-size: 1rem;">REMITO DE ENTREGA</h3>
-                        <p style="margin: 0.15rem 0;"><strong>N° Operación:</strong> <span id="remito-numero">#0001</span></p>
-                        <p style="margin: 0.15rem 0;"><strong>Fecha y Hora:</strong> <span id="remito-fecha">-</span></p>
-                        <p style="margin: 0.15rem 0;"><strong>Atendido por:</strong> <span id="remito-vendedor">-</span></p>
+                    <!-- Datos del cliente -->
+                    <div class="remito-cliente">
+                        <div class="remito-cliente-fila">
+                            <div><strong>Señor/es:</strong> Consumidor Final (Venta Mostrador)</div>
+                            <div><strong>Atendido por:</strong> <span id="remito-vendedor">-</span></div>
+                        </div>
+                        <div class="remito-cliente-fila">
+                            <div><strong>Domicilio:</strong> -</div>
+                            <div><strong>C.U.I.T./D.N.I.:</strong> -</div>
+                        </div>
+                        <div class="remito-cliente-fila">
+                            <div><strong>I.V.A.:</strong> Consumidor Final</div>
+                            <div><strong>Condición de venta:</strong> Contado / Efectivo</div>
+                        </div>
                     </div>
-                </div>
 
-                <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 0.65rem 1rem; margin-bottom: 1rem; display: flex; justify-content: space-between; font-size: 0.85rem;">
-                    <div><strong>Cliente:</strong> Consumidor Final (Venta Mostrador)</div>
-                    <div><strong>Condición de Venta:</strong> Contado / Efectivo</div>
-                </div>
-
-                <div style="overflow-x: visible; margin-bottom: 1.25rem;">
-                    <table class="table" style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+                    <!-- Detalle de artículos -->
+                    <table class="remito-items-table">
                         <thead>
                             <tr>
-                                <th style="width: 14%;">Código</th>
-                                <th style="width: 40%;">Descripción del Artículo</th>
-                                <th style="width: 10%; text-align: center;">Cant.</th>
-                                <th style="width: 18%; text-align: right; white-space: nowrap;">Precio Unit.</th>
-                                <th style="width: 18%; text-align: right; white-space: nowrap;">Subtotal</th>
+                                <th>Código</th>
+                                <th>Descripción del artículo</th>
+                                <th>Cant.</th>
+                                <th>Precio unit.</th>
+                                <th>Subtotal</th>
                             </tr>
                         </thead>
-                        <tbody id="remito-tbody-items">
-                        </tbody>
+                        <tbody id="remito-tbody-items"></tbody>
                     </table>
-                </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #d1d5db; padding-top: 1.25rem; gap: 1.5rem;">
-                    <div style="width: 45%; text-align: center;">
-                        <div style="border-top: 1px dashed #6b7280; padding-top: 0.35rem; font-size: 0.78rem; color: #4b5563;">
-                            Firma y Aclaración de Recepción
+                    <!-- Pie -->
+                    <div class="remito-pie">
+                        <div class="remito-pie-izq">
+                            <div class="remito-obs-titulo">Observaciones:</div>
+                            <div class="remito-obs-linea"></div>
+                            <div class="remito-obs-linea"></div>
+                            <div class="remito-firmas">
+                                <div class="firma-linea">Firma</div>
+                                <div class="firma-linea">Aclaración</div>
+                                <div class="firma-linea">D.N.I.</div>
+                            </div>
+                            <div class="remito-recibi">Recibí conforme</div>
+                        </div>
+                        <div class="remito-totales-box">
+                            <span class="remito-total-txt">TOTAL</span>
+                            <strong id="remito-total" class="remito-total-val">$ 0,00</strong>
                         </div>
                     </div>
-                    <div style="text-align: right;">
-                        <span style="font-size: 0.95rem; font-weight: 600; color: #374151; margin-right: 0.75rem;">TOTAL PAGADO:</span>
-                        <strong id="remito-total" style="font-size: 1.45rem; color: #15803d; white-space: nowrap;">$ 0,00</strong>
-                    </div>
+
+                    <div class="remito-leyenda">Documento no válido como factura</div>
                 </div>
             </div>
 
@@ -635,6 +667,39 @@
         </div>
     </div>
 
+    <!-- MODAL: REPONER STOCK DE PRODUCTO -->
+    <div id="modal-reponer-stock" class="modal-backdrop" style="display:none;">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h3>Reponer Stock de Producto</h3>
+                <button class="btn-close" onclick="cerrarModalReponerStock()">&times;</button>
+            </header>
+            <form id="form-reponer-stock" onsubmit="guardarReposicionStock(event)">
+                <div class="info-box" style="margin-bottom: 1rem;">
+                    <h4 id="rep-producto-titulo">-</h4>
+                    <p style="font-size: 0.85rem; margin: 0;">Stock actual en depósito: <strong id="rep-stock-actual">0</strong> u.</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="rep-proveedor">Proveedor (Opcional)</label>
+                    <select id="rep-proveedor">
+                        <option value="">-- Sin especificar / Compra directa --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="rep-cantidad">Cantidad a Ingresar (+ unidades)</label>
+                    <input type="number" id="rep-cantidad" min="1" step="1" required placeholder="Ej: 20">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalReponerStock()">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Sumar al Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL: REGISTRAR CLIENTE -->
     <div id="modal-cliente" class="modal-backdrop" style="display:none;">
         <div class="modal-card">
@@ -682,3 +747,109 @@
             </header>
             <form id="form-proveedor" onsubmit="guardarProveedor(event)">
                 <div class="form-group">
+                    <label for="prov-razon">Razón Social / Distribuidora</label>
+                    <input type="text" id="prov-razon" required placeholder="Ej: Distribuidora Granos & Cía">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prov-cuit">CUIT (11 dígitos sin guiones)</label>
+                        <input type="text" id="prov-cuit" inputmode="numeric" pattern="[0-9]{11}" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required placeholder="Ej: 30123456789">
+                    </div>
+                    <div class="form-group">
+                        <label for="prov-rubro">Rubro Principal</label>
+                        <input type="text" id="prov-rubro" required placeholder="Ej: Frutos secos y legumbres">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="prov-telefono">Teléfono (solo números)</label>
+                        <input type="tel" id="prov-telefono" inputmode="numeric" pattern="[0-9]{7,15}" maxlength="15" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required placeholder="Ej: 2914455667">
+                    </div>
+                    <div class="form-group">
+                        <label for="prov-email">Email</label>
+                        <input type="email" id="prov-email" required placeholder="ventas@gmail.com">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalProveedor()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Proveedor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: REGISTRAR INGRESO / COBRO A CLIENTE EN CAJA -->
+    <div id="modal-ingreso-caja" class="modal-backdrop" style="display:none;">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h3>Registrar Ingreso / Cobro en Caja</h3>
+                <button class="btn-close" onclick="cerrarModalIngresoCaja()">&times;</button>
+            </header>
+            <form id="form-ingreso-caja" onsubmit="guardarIngresoCaja(event)">
+                <div class="form-group">
+                    <label for="ingreso-tipo">Tipo de Ingreso</label>
+                    <select id="ingreso-tipo" required>
+                        <option value="INGRESO_COBRO_CLIENTE">Cobro / Pago de Cliente</option>
+                        <option value="INGRESO_APORTE_CAJA">Apertura / Refuerzo de Cambio en Caja</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ingreso-cliente">Cliente (opcional — seleccionar si corresponde)</label>
+                    <select id="ingreso-cliente" onchange="autocompletarConceptoCliente()">
+                        <option value="">-- Sin cliente específico / Mostrador --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ingreso-concepto">Concepto / Detalle del Ingreso</label>
+                    <input type="text" id="ingreso-concepto" required placeholder="Ej: Cobro en efectivo cliente Carolina Rossi">
+                </div>
+                <div class="form-group">
+                    <label for="ingreso-monto">Monto Recibido ($)</label>
+                    <input type="number" id="ingreso-monto" step="0.01" min="0.01" required placeholder="0.00">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalIngresoCaja()">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Registrar Ingreso</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: REGISTRAR EGRESO DE CAJA -->
+    <div id="modal-egreso-caja" class="modal-backdrop" style="display:none;">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h3>Registrar Egreso de Caja</h3>
+                <button class="btn-close" onclick="cerrarModalEgresoCaja()">&times;</button>
+            </header>
+            <form id="form-egreso-caja" onsubmit="guardarEgresoCaja(event)">
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 0.65rem 0.9rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.88rem;">
+                    <strong>Saldo disponible actual en caja:</strong> <span id="egreso-saldo-disponible">$ 0,00</span>
+                </div>
+                <div class="form-group">
+                    <label for="egreso-tipo">Tipo de Egreso</label>
+                    <select id="egreso-tipo" required>
+                        <option value="EGRESO_PROVEEDOR">Pago a Proveedores</option>
+                        <option value="EGRESO_IMPUESTOS">Pago de Impuestos y Servicios (Luz, Alquiler, AFIP)</option>
+                        <option value="EGRESO_GASTOS">Gastos Operativos / Insumos de Tienda</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="egreso-concepto">Concepto / Detalle del Comprobante</label>
+                    <input type="text" id="egreso-concepto" required placeholder="Ej: Pago factura Molinos del Sur N° 458">
+                </div>
+                <div class="form-group">
+                    <label for="egreso-monto">Monto del Egreso ($)</label>
+                    <input type="number" id="egreso-monto" step="0.01" min="0.01" required placeholder="0.00">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalEgresoCaja()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar Salida de Dinero</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

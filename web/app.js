@@ -1,6 +1,6 @@
 /**
- * DIETÉTICA VIDA NATURAL — LÓGICA FRONTEND
- * Estilo ERP Comercial (Sin Emojis, Diseño Limpio)
+- DIETÉTICA VIDA NATURAL — LÓGICA FRONTEND
+- Estilo ERP Comercial (Sin Emojis, Diseño Limpio)
  */
 
 let usuarioActual = null;
@@ -10,6 +10,7 @@ let listaProductosGlobal = [];
 let listaVentasGlobal = [];
 let listaClientesGlobal = [];
 let editandoProductoCodigo = null;
+let reponiendoProductoCodigo = null;
 let saldoActualCaja = 0;
 
 // Interceptor global de fetch para enviar el perfil en cada petición API
@@ -121,7 +122,7 @@ function mostrarPanelPrincipal() {
     document.getElementById("nav-clientes").style.display = esAdmin ? "block" : "none";
     document.getElementById("nav-proveedores").style.display = esAdmin ? "block" : "none";
     document.getElementById("nav-caja").style.display = "block";
-    document.getElementById("nav-recaudacion").style.display = esAdmin ? "block" : "none";
+    document.getElementById("nav-recaudacion").style.display = "block";
 
     if (esAdmin) {
         cambiarSeccion("ventas");
@@ -135,7 +136,7 @@ function mostrarPanelPrincipal() {
 // ============================================================
 function cambiarSeccion(seccion) {
     const esGerente = usuarioActual && usuarioActual.perfil === "GERENTE";
-    const seccionesPermitidasGerente = ["stock-bajo", "caja"];
+    const seccionesPermitidasGerente = ["stock-bajo", "recaudacion", "caja"];
 
     if (esGerente && !seccionesPermitidasGerente.includes(seccion)) {
         seccion = "stock-bajo";
@@ -454,31 +455,46 @@ function abrirModalRemito(ventaId) {
     const v = listaVentasGlobal.find(item => item.id === ventaId);
     if (!v) return;
 
+    const fmtMoneda = n => `$ ${Number(n).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
     const numeroFormateado = "0001-" + String(v.id).padStart(8, "0");
-    const fechaFmt = v.fecha ? v.fecha.replace("T", " ").substring(0, 19) : "-";
+    let fechaTxt = "-";
+    let horaTxt = "-";
+    if (v.fecha) {
+        const [f, hh] = v.fecha.replace("T", " ").substring(0, 19).split(" ");
+        const [aa, mm, dd] = f.split("-");
+        fechaTxt = `${dd}/${mm}/${aa}`;
+        horaTxt = hh || "-";
+    }
 
     document.getElementById("remito-numero").textContent = numeroFormateado;
-    document.getElementById("remito-fecha").textContent = fechaFmt;
+    document.getElementById("remito-fecha").textContent = fechaTxt;
+    document.getElementById("remito-hora").textContent = horaTxt;
     document.getElementById("remito-vendedor").textContent = usuarioActual ? `${usuarioActual.nombre} ${usuarioActual.apellido}` : `Operador #${v.usuarioId}`;
-    document.getElementById("remito-total").textContent = `$ ${v.importeTotal.toFixed(2)}`;
+    document.getElementById("remito-total").textContent = fmtMoneda(v.importeTotal);
 
     const tbodyItems = document.getElementById("remito-tbody-items");
     tbodyItems.innerHTML = "";
 
-    if (v.detalles && v.detalles.length > 0) {
-        v.detalles.forEach(d => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td><code>${d.productoCodigo}</code></td>
-                <td>${d.descripcion || 'Artículo Natural'}</td>
-                <td style="text-align: center;">${d.cantidad}</td>
-                <td style="text-align: right; white-space: nowrap;">$ ${d.precioUnitario.toFixed(2)}</td>
-                <td style="text-align: right; white-space: nowrap;"><strong>$ ${d.subtotal.toFixed(2)}</strong></td>
-            `;
-            tbodyItems.appendChild(tr);
-        });
-    } else {
-        tbodyItems.innerHTML = `<tr><td colspan="5" class="text-center">Venta sin desglose de artículos.</td></tr>`;
+    const detalles = v.detalles || [];
+    detalles.forEach(d => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${d.productoCodigo}</td>
+            <td>${d.descripcion || "Artículo Natural"}</td>
+            <td>${d.cantidad}</td>
+            <td>${fmtMoneda(d.precioUnitario)}</td>
+            <td>${fmtMoneda(d.subtotal)}</td>
+        `;
+        tbodyItems.appendChild(tr);
+    });
+
+    // Renglones vacíos hasta completar la grilla, como en un remito preimpreso
+    const RENGLONES_MINIMOS = 18;
+    for (let i = detalles.length; i < RENGLONES_MINIMOS; i++) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = "<td>&nbsp;</td><td></td><td></td><td></td><td></td>";
+        tbodyItems.appendChild(tr);
     }
 
     document.getElementById("modal-remito").style.display = "flex";
@@ -529,7 +545,7 @@ function limpiarFiltrosHistorial() {
 }
 
 // ============================================================
-// 4. INVENTARIO DE PRODUCTOS (ALTA, MODIFICACIÓN, BAJA Y REACTIVACIÓN)
+// 4. INVENTARIO DE PRODUCTOS (ALTA, MODIFICACIÓN, BAJA, REACTIVACIÓN Y REPOSICIÓN)
 // ============================================================
 async function cargarProductos() {
     try {
@@ -565,6 +581,7 @@ function renderizarTablaProductos(productos) {
                 </span>
             </td>
             <td style="white-space: nowrap;">
+                <button class="btn btn-primary btn-sm" onclick="abrirModalReponerStock('${p.codigo}')">+ Reponer</button>
                 <button class="btn btn-secondary btn-sm" onclick="editarProducto('${p.codigo}')">Modificar</button>
                 ${p.activo 
                     ? `<button class="btn btn-outline-danger btn-sm" onclick="darBajaProducto('${p.codigo}')">Baja</button>` 
@@ -708,6 +725,86 @@ async function reactivarProducto(codigo) {
     }
 }
 
+async function abrirModalReponerStock(codigo) {
+    const p = listaProductosGlobal.find(item => item.codigo === codigo);
+    if (!p) return;
+
+    reponiendoProductoCodigo = p.codigo;
+    document.getElementById("form-reponer-stock").reset();
+    document.getElementById("rep-producto-titulo").textContent = `${p.codigo} - ${p.descripcion}`;
+    document.getElementById("rep-stock-actual").textContent = p.stockActual;
+
+    const selectProv = document.getElementById("rep-proveedor");
+    selectProv.innerHTML = `<option value="">-- Sin especificar / Compra directa --</option>`;
+    try {
+        const res = await fetch("/api/proveedores");
+        if (res.ok) {
+            const proveedores = await res.json();
+            proveedores.forEach(prov => {
+                const opt = document.createElement("option");
+                opt.value = prov.razonSocial;
+                opt.textContent = `${prov.razonSocial} (${prov.rubro})`;
+                selectProv.appendChild(opt);
+            });
+        }
+    } catch (e) {
+        console.error("No se pudieron cargar los proveedores:", e);
+    }
+
+    document.getElementById("modal-reponer-stock").style.display = "flex";
+    document.getElementById("rep-cantidad").focus();
+}
+
+function cerrarModalReponerStock() {
+    document.getElementById("modal-reponer-stock").style.display = "none";
+    reponiendoProductoCodigo = null;
+}
+
+async function guardarReposicionStock(e) {
+    e.preventDefault();
+    const p = listaProductosGlobal.find(item => item.codigo === reponiendoProductoCodigo);
+    if (!p) return;
+
+    const cantidadIngresada = parseInt(document.getElementById("rep-cantidad").value, 10);
+    if (isNaN(cantidadIngresada) || cantidadIngresada <= 0) {
+        alert("Ingrese una cantidad válida mayor a cero.");
+        return;
+    }
+
+    const nuevoStock = p.stockActual + cantidadIngresada;
+    const proveedorElegido = document.getElementById("rep-proveedor").value;
+
+    const payload = {
+        codigo: p.codigo,
+        descripcion: p.descripcion,
+        categoria: p.categoria,
+        precioUnitario: p.precioUnitario,
+        stockActual: nuevoStock,
+        stockMinimo: p.stockMinimo,
+        activo: p.activo
+    };
+
+    try {
+        const res = await fetch("/api/productos", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.ok && data.exito) {
+            const detalleProv = proveedorElegido ? ` (Proveedor: ${proveedorElegido})` : "";
+            alert(`Stock actualizado: +${cantidadIngresada} u. agregadas${detalleProv}. Nuevo stock disponible: ${nuevoStock} u.`);
+            cerrarModalReponerStock();
+            cargarProductos();
+        } else {
+            alert(data.error || "No se pudo actualizar el stock.");
+        }
+    } catch (err) {
+        alert("Error de conexión al reponer stock.");
+    }
+}
+
 // ============================================================
 // 5. CONTROL DE STOCK MÍNIMO (GERENTE Y ADMINISTRATIVO)
 // ============================================================
@@ -745,7 +842,7 @@ async function cargarStockBajo() {
 }
 
 // ============================================================
-// 6. REPORTE DE RECAUDACIÓN (ADMINISTRATIVO)
+// 6. REPORTE DE RECAUDACIÓN (GERENTE Y ADMINISTRATIVO)
 // ============================================================
 async function consultarRecaudacion() {
     const desde = document.getElementById("fecha-desde").value;
@@ -1195,11 +1292,8 @@ async function guardarEgresoCaja(e) {
 async function realizarCierreCajaDiario() {
     const fechaHoy = obtenerFechaHoyLocal();
     const confirmacion = confirm(
-        `¿Confirma el CIERRE DIARIO DE CAJA correspondiente a la fecha ${fechaHoy}?
-
-` +
-        `Saldo declarado en arqueo: $ ${saldoActualCaja.toFixed(2)}
-` +
+        `¿Confirma el CIERRE DIARIO DE CAJA correspondiente a la fecha ${fechaHoy}?\n\n` +
+        `Saldo declarado en arqueo: $ ${saldoActualCaja.toFixed(2)}\n` +
         `Responsable: ${usuarioActual.nombre} ${usuarioActual.apellido}`
     );
     if (!confirmacion) return;

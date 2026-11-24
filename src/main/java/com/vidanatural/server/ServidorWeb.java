@@ -226,7 +226,7 @@ public class ServidorWeb {
     private class RecaudadoHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
-            if (!verificarRolAdmin(exchange)) return;
+            if (!verificarRolAdminOGerente(exchange)) return;
 
             Map<String, String> query = parseQuery(exchange.getRequestURI().getQuery());
             String desdeStr = query.get("desde");
@@ -420,6 +420,15 @@ public class ServidorWeb {
         String perfil = exchange.getRequestHeaders().getFirst("X-User-Perfil");
         if (!"ADMINISTRATIVO".equalsIgnoreCase(perfil)) {
             responderJson(exchange, 403, "{\"error\":\"Acceso denegado: acción exclusiva del perfil Administrativo\"}");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean verificarRolAdminOGerente(HttpExchange exchange) throws IOException {
+        String perfil = exchange.getRequestHeaders().getFirst("X-User-Perfil");
+        if (!"ADMINISTRATIVO".equalsIgnoreCase(perfil) && !"GERENTE".equalsIgnoreCase(perfil)) {
+            responderJson(exchange, 403, "{\"error\":\"Acceso denegado: requiere perfil Administrativo o Gerente\"}");
             return false;
         }
         return true;
