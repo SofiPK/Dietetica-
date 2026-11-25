@@ -16,7 +16,7 @@ public class Usuario {
         this.nombre = nombre;
         this.apellido = apellido;
         this.contrasena = contrasena;
-        this.perfil = perfil;
+        this.perfil = perfil; // poner ambos roles
     }
 
     public int getId() { return id; }

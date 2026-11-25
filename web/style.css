@@ -544,12 +544,6 @@ body {
     color: var(--primary);
 }
 
-.btn-sm {
-    padding: 0.3rem 0.6rem;
-    font-size: 0.8rem;
-    border-radius: 4px;
-}
-
 .btn-link {
     background: none;
     border: none;
@@ -695,6 +689,76 @@ body {
 }
 
 /* ============================================================
+   MÓDULOS: CAJA, PROMOCIONES Y REPORTES AMPLIADOS
+   ============================================================ */
+
+.kpi-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 1.2rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-card-primary {
+    background: var(--primary-light);
+    border-color: #a5d6a7;
+}
+
+.stat-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.stat-card-primary .stat-value {
+    color: var(--primary-hover);
+}
+
+.checklist-box {
+    max-height: 170px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 0.6rem 0.8rem;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.88rem;
+    cursor: pointer;
+}
+
+.checklist-item input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
+}
+
+/* ============================================================
    DISEÑO 100% RESPONSIVE (MOBILE & TABLET ADAPTATION)
    ============================================================ */
 
@@ -743,7 +807,8 @@ body {
     }
 
     .form-row,
-    #modal-producto .form-row {
+    #modal-producto .form-row,
+    .kpi-grid-3 {
         display: flex;
         flex-direction: column;
         gap: 0.6rem;

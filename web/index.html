@@ -9,7 +9,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Estilos específicos para el Login con imagen de fondo y header blanco */
         #vista-login {
             min-height: 100vh;
             width: 100%;
@@ -51,10 +50,6 @@
             max-width: 460px;
             padding: 3rem 2.75rem;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
-        }
-        .badge-warning {
-            background-color: #fef3c7;
-            color: #92400e;
         }
     </style>
 </head>
@@ -191,6 +186,9 @@
             </div>
 
             <div class="header-right">
+                <span id="header-caja-estado" class="badge badge-warning" style="margin-right: 0.75rem; cursor: pointer;" onclick="cambiarSeccion('caja')">
+                    Caja: Verificando...
+                </span>
                 <div class="user-dropdown-wrapper">
                     <button class="user-dropdown-btn" onclick="toggleUserMenu()">
                         <span id="header-user-name" class="user-name">Usuario</span>
@@ -211,11 +209,20 @@
                     <button class="nav-item active" id="nav-ventas" onclick="cambiarSeccion('ventas')">
                         Registrar Venta
                     </button>
+                    <button class="nav-item" id="nav-caja" onclick="cambiarSeccion('caja')">
+                        Control de Caja
+                    </button>
                     <button class="nav-item" id="nav-historial-ventas" onclick="cambiarSeccion('historial-ventas')">
                         Historial de Ventas
                     </button>
                     <button class="nav-item" id="nav-productos" onclick="cambiarSeccion('productos')">
                         Inventario de Productos
+                    </button>
+                    <button class="nav-item" id="nav-clientes" onclick="cambiarSeccion('clientes')">
+                        Clientes
+                    </button>
+                    <button class="nav-item" id="nav-promociones" onclick="cambiarSeccion('promociones')">
+                        Promociones
                     </button>
                     <button class="nav-item" id="nav-stock-bajo" onclick="cambiarSeccion('stock-bajo')">
                         Control de Stock Mínimo
@@ -231,9 +238,15 @@
                 
                 <!-- SECCIÓN 1: REGISTRAR VENTA (ADMINISTRATIVO) -->
                 <section id="seccion-ventas" class="seccion-view">
-                    <header class="section-heading">
+                    <header class="section-heading flex-between">
                         <h2>Registrar Venta</h2>
+                        <span id="venta-caja-aviso" class="badge badge-success">Caja Abierta</span>
                     </header>
+
+                    <div id="venta-caja-cerrada-banner" class="alert alert-error" style="display:none;">
+                        <strong>Caja cerrada:</strong> Debe realizar la apertura de caja antes de registrar ventas en el mostrador.
+                        <button type="button" class="btn btn-primary btn-sm" style="margin-left: 0.8rem;" onclick="cambiarSeccion('caja')">Ir a Control de Caja</button>
+                    </div>
 
                     <div class="grid-venta">
                         <div class="card">
@@ -252,12 +265,15 @@
                             </div>
 
                             <div id="venta-info-prod" class="info-box" style="display:none;">
-                                <h4 id="vip-desc">-</h4>
+                                <div class="flex-between" style="margin-bottom: 0.4rem;">
+                                    <h4 id="vip-desc" style="margin:0;">-</h4>
+                                    <span id="vip-promo-badge" class="badge badge-warning" style="display:none;">Promoción</span>
+                                </div>
                                 <div class="info-grid">
                                     <div><strong>Categoría:</strong> <span id="vip-cat">-</span></div>
-                                    <div><strong>Precio unitario:</strong> $<span id="vip-precio">0.00</span></div>
+                                    <div><strong>Precio lista:</strong> $<span id="vip-precio">0.00</span></div>
                                     <div><strong>Stock disponible:</strong> <span id="vip-stock" class="badge">0</span></div>
-                                    <div><strong>Stock mínimo:</strong> <span id="vip-stock-min">0</span></div>
+                                    <div><strong>Precio final:</strong> $<span id="vip-precio-final">0.00</span></div>
                                 </div>
                             </div>
 
@@ -274,26 +290,50 @@
 
                         <div class="card">
                             <h3 class="card-title">Detalle de la Venta en Curso</h3>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="venta-cliente">Cliente (Opcional)</label>
+                                    <select id="venta-cliente">
+                                        <option value="">Consumidor Final (Sin asignar)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="venta-medio-pago">Medio de Pago</label>
+                                    <select id="venta-medio-pago">
+                                        <option value="EFECTIVO">Efectivo (Impacta en Caja)</option>
+                                        <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                                        <option value="DEBITO_CREDITO">Tarjeta Débito / Crédito</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             <div class="table-responsive">
                                 <table class="table" id="tabla-carrito">
                                     <thead>
                                         <tr>
                                             <th>Código</th>
                                             <th>Descripción</th>
-                                            <th>Precio Unit.</th>
+                                            <th>Precio</th>
                                             <th>Cant.</th>
+                                            <th>Dto.</th>
                                             <th>Subtotal</th>
                                             <th>Acción</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tbody-carrito">
-                                        <tr class="empty-row"><td colspan="6">No hay productos agregados a la venta.</td></tr>
+                                        <tr class="empty-row"><td colspan="7">No hay productos agregados a la venta.</td></tr>
                                     </tbody>
                                 </table>
                             </div>
 
+                            <div id="venta-resumen-descuento" class="flex-between" style="display:none; padding-top: 0.8rem; color: var(--warning); font-weight: 600; font-size: 0.9rem;">
+                                <span>Ahorro por Promociones Vigentes:</span>
+                                <span id="venta-descuento-total">-$0.00</span>
+                            </div>
+
                             <div class="total-bar">
-                                <span class="total-label">Importe Total de la Venta:</span>
+                                <span class="total-label">Importe Total a Cobrar:</span>
                                 <span class="total-monto" id="venta-total">$0.00</span>
                             </div>
 
@@ -304,7 +344,145 @@
                     </div>
                 </section>
 
-                <!-- SECCIÓN 2: HISTORIAL DE VENTAS (ADMINISTRATIVO) -->
+                <!-- SECCIÓN 2: CONTROL DE CAJA (ADMINISTRATIVO Y GERENTE) -->
+                <section id="seccion-caja" class="seccion-view" style="display:none;">
+                    <header class="section-heading flex-between">
+                        <h2>Control y Arqueo de Caja</h2>
+                        <span id="caja-badge-principal" class="badge badge-warning">Verificando...</span>
+                    </header>
+
+                    <div id="caja-alerta" class="alert" style="display:none;"></div>
+
+                    <!-- VISTA CUANDO LA CAJA ESTÁ CERRADA -->
+                    <div id="panel-caja-cerrada" class="card" style="display:none;">
+                        <h3 class="card-title">Apertura de Caja del Turno</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.2rem;">
+                            Actualmente no hay ninguna caja abierta. Ingrese el fondo inicial en efectivo para habilitar la operatoria de ventas.
+                        </p>
+                        <form id="form-abrir-caja" onsubmit="abrirCajaTurno(event)">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="caja-monto-inicial">Monto Inicial en Efectivo ($)</label>
+                                    <input type="number" id="caja-monto-inicial" step="0.01" min="0" required placeholder="0.00">
+                                </div>
+                                <div class="form-group flex-2">
+                                    <label for="caja-obs-apertura">Observaciones de Apertura</label>
+                                    <input type="text" id="caja-obs-apertura" placeholder="Ej: Cambio inicial turno mañana">
+                                </div>
+                                <div class="form-group align-end">
+                                    <button type="submit" class="btn btn-primary">Abrir Caja</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- VISTA CUANDO LA CAJA ESTÁ ABIERTA -->
+                    <div id="panel-caja-abierta" style="display:none;">
+                        <div class="kpi-grid-3">
+                            <div class="stat-card">
+                                <span class="stat-label">FONDO INICIAL</span>
+                                <span class="stat-value" id="caja-stat-inicial">$0.00</span>
+                            </div>
+                            <div class="stat-card stat-card-primary">
+                                <span class="stat-label">SALDO ACTUAL EN CAJA (EFECTIVO)</span>
+                                <span class="stat-value" id="caja-stat-actual">$0.00</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">APERTURA DE TURNO</span>
+                                <span class="stat-value" style="font-size: 1.05rem;" id="caja-stat-fecha">-</span>
+                            </div>
+                        </div>
+
+                        <div class="grid-venta" id="caja-operaciones-admin">
+                            <div class="card">
+                                <h3 class="card-title">Registrar Movimiento Manual</h3>
+                                <form id="form-movimiento-caja" onsubmit="registrarMovimientoCaja(event)">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="mov-tipo">Tipo de Movimiento</label>
+                                            <select id="mov-tipo" required>
+                                                <option value="INGRESO_MANUAL">Ingreso de Efectivo (+)</option>
+                                                <option value="EGRESO_MANUAL">Retiro / Gasto (-)</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="mov-monto">Monto ($)</label>
+                                            <input type="number" id="mov-monto" step="0.01" min="0.01" required placeholder="0.00">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="mov-concepto">Concepto / Motivo</label>
+                                        <input type="text" id="mov-concepto" required placeholder="Ej: Pago flete proveedor / Refuerzo cambio">
+                                    </div>
+                                    <button type="submit" class="btn btn-secondary btn-block">Registrar Movimiento</button>
+                                </form>
+                            </div>
+
+                            <div class="card">
+                                <h3 class="card-title">Cierre y Arqueo de Caja</h3>
+                                <form id="form-cerrar-caja" onsubmit="cerrarCajaTurno(event)">
+                                    <div class="form-group">
+                                        <label for="caja-monto-real">Efectivo Real Contado en Caja ($)</label>
+                                        <input type="number" id="caja-monto-real" step="0.01" min="0" required placeholder="0.00" oninput="actualizarVistaDiferenciaCierre()">
+                                    </div>
+                                    <div id="caja-preview-diferencia" class="info-box" style="padding: 0.7rem 1rem; margin-bottom: 1rem;">
+                                        <strong>Diferencia estimada:</strong> <span id="caja-diff-valor">$0.00</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="caja-obs-cierre">Observaciones de Cierre</label>
+                                        <input type="text" id="caja-obs-cierre" placeholder="Opcional: detalle de sobrante o faltante">
+                                    </div>
+                                    <button type="submit" class="btn btn-outline-danger btn-block">Cerrar Caja y Guardar Arqueo</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="card-title">Movimientos de la Caja Actual</h3>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Hora</th>
+                                            <th>Tipo</th>
+                                            <th>Concepto</th>
+                                            <th>Monto</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-movimientos-caja">
+                                        <tr><td colspan="4">Sin movimientos registrados.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- HISTORIAL DE CIERRES DE CAJA -->
+                    <div class="card">
+                        <h3 class="card-title">Historial de Cierres de Caja</h3>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Caja #</th>
+                                        <th>Apertura</th>
+                                        <th>Cierre</th>
+                                        <th>Inicial</th>
+                                        <th>Esperado</th>
+                                        <th>Real Contado</th>
+                                        <th>Diferencia</th>
+                                        <th>Observaciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-historial-cajas">
+                                    <tr><td colspan="8">Cargando historial de cajas...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN 3: HISTORIAL DE VENTAS -->
                 <section id="seccion-historial-ventas" class="seccion-view" style="display:none;">
                     <header class="section-heading flex-between">
                         <h2>Historial de Ventas</h2>
@@ -337,19 +515,21 @@
                                         <th>Venta #</th>
                                         <th>Fecha y Hora</th>
                                         <th>Artículos Vendidos</th>
+                                        <th>Medio de Pago</th>
+                                        <th>Descuento</th>
                                         <th>Total</th>
                                         <th>Estado</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tbody-historial-erp">
-                                    <tr><td colspan="5">Cargando ventas...</td></tr>
+                                    <tr><td colspan="7">Cargando ventas...</td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </section>
 
-                <!-- SECCIÓN 3: INVENTARIO DE PRODUCTOS (ADMINISTRATIVO) -->
+                <!-- SECCIÓN 4: INVENTARIO DE PRODUCTOS -->
                 <section id="seccion-productos" class="seccion-view" style="display:none;">
                     <header class="section-heading flex-between">
                         <div>
@@ -385,7 +565,68 @@
                     </div>
                 </section>
 
-                <!-- SECCIÓN 4: CONTROL DE STOCK MÍNIMO (ADMINISTRATIVO Y GERENTE) -->
+                <!-- SECCIÓN 5: CLIENTES -->
+                <section id="seccion-clientes" class="seccion-view" style="display:none;">
+                    <header class="section-heading flex-between">
+                        <h2>Gestión de Clientes</h2>
+                        <button id="btn-nuevo-cliente" class="btn btn-primary" onclick="abrirModalCliente()">+ Registrar Cliente</button>
+                    </header>
+
+                    <div class="card">
+                        <div class="search-bar">
+                            <input type="text" id="filtro-clientes" placeholder="Buscar cliente por DNI/CUIT, nombre, apellido o teléfono" oninput="filtrarClientes()">
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>DNI / CUIT</th>
+                                        <th>Nombre y Apellido</th>
+                                        <th>Teléfono</th>
+                                        <th>Correo Electrónico</th>
+                                        <th>Difusión Promos</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-clientes">
+                                    <tr><td colspan="7">Cargando clientes...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN 6: PROMOCIONES -->
+                <section id="seccion-promociones" class="seccion-view" style="display:none;">
+                    <header class="section-heading flex-between">
+                        <h2>Promociones y Descuentos</h2>
+                        <button id="btn-nueva-promo" class="btn btn-primary" onclick="abrirModalPromocion()">+ Nueva Promoción</button>
+                    </header>
+
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Descuento</th>
+                                        <th>Vigencia</th>
+                                        <th>Productos Incluidos</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-promociones">
+                                    <tr><td colspan="6">Cargando promociones...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN 7: CONTROL DE STOCK MÍNIMO -->
                 <section id="seccion-stock-bajo" class="seccion-view" style="display:none;">
                     <header class="section-heading">
                         <h2>Control de Stock Mínimo</h2>
@@ -413,7 +654,7 @@
                     </div>
                 </section>
 
-                <!-- SECCIÓN 5: REPORTE DE RECAUDACIÓN (GERENTE) -->
+                <!-- SECCIÓN 8: REPORTE DE RECAUDACIÓN (GERENTE) -->
                 <section id="seccion-recaudacion" class="seccion-view" style="display:none;">
                     <header class="section-heading">
                         <h2>Reporte de Recaudación</h2>
@@ -440,6 +681,59 @@
                         <div class="kpi-card">
                             <span class="kpi-title">TOTAL RECAUDADO EN EL PERÍODO</span>
                             <span class="kpi-value" id="kpi-monto-recaudado">$ 0,00</span>
+                        </div>
+
+                        <div class="kpi-grid-3" style="margin-top: 1.5rem;">
+                            <div class="stat-card">
+                                <span class="stat-label">VENTAS CONFIRMADAS</span>
+                                <span class="stat-value" id="kpi-cant-ventas">0</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">TICKET PROMEDIO</span>
+                                <span class="stat-value" id="kpi-ticket-promedio">$ 0,00</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">DESCUENTOS POR PROMOCIONES</span>
+                                <span class="stat-value" style="color: var(--warning);" id="kpi-total-descuentos">$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid-venta">
+                        <div class="card">
+                            <h3 class="card-title">Recaudación por Medio de Pago</h3>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Medio de Pago</th>
+                                            <th>Operaciones</th>
+                                            <th>Total Recaudado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-reporte-medios">
+                                        <tr><td colspan="3">Sin datos en el período.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="card-title">Productos Más Vendidos (Top 5)</h3>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Unidades</th>
+                                            <th>Recaudado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-reporte-top">
+                                        <tr><td colspan="3">Sin datos en el período.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -492,6 +786,97 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="cerrarModalProducto()">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Guardar Datos</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: REGISTRAR / MODIFICAR CLIENTE -->
+    <div id="modal-cliente" class="modal-backdrop" style="display:none;">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h3 id="modal-cliente-titulo">Registrar Cliente</h3>
+                <button class="btn-close" onclick="cerrarModalCliente()">&times;</button>
+            </header>
+            <form id="form-cliente" onsubmit="guardarCliente(event)">
+                <div class="form-group">
+                    <label for="cli-dni">DNI / CUIT</label>
+                    <input type="text" id="cli-dni" required placeholder="Ej: 32456789">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cli-nombre">Nombre</label>
+                        <input type="text" id="cli-nombre" required placeholder="Ej: Lucía">
+                    </div>
+                    <div class="form-group">
+                        <label for="cli-apellido">Apellido</label>
+                        <input type="text" id="cli-apellido" required placeholder="Ej: Fernández">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cli-telefono">Teléfono</label>
+                        <input type="text" id="cli-telefono" placeholder="Ej: 291-4567890">
+                    </div>
+                    <div class="form-group">
+                        <label for="cli-email">Correo Electrónico</label>
+                        <input type="email" id="cli-email" placeholder="cliente@correo.com">
+                    </div>
+                </div>
+                <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="cli-acepta-promos" checked style="width: auto;">
+                    <label for="cli-acepta-promos" style="margin: 0;">Acepta recibir novedades y promociones</label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalCliente()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: REGISTRAR / MODIFICAR PROMOCIÓN -->
+    <div id="modal-promocion" class="modal-backdrop" style="display:none;">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h3 id="modal-promo-titulo">Nueva Promoción</h3>
+                <button class="btn-close" onclick="cerrarModalPromocion()">&times;</button>
+            </header>
+            <form id="form-promocion" onsubmit="guardarPromocion(event)">
+                <div class="form-group">
+                    <label for="promo-nombre">Nombre de la Promoción</label>
+                    <input type="text" id="promo-nombre" required placeholder="Ej: Semana de Cereales 15% OFF">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="promo-tipo">Tipo de Descuento</label>
+                        <select id="promo-tipo" required>
+                            <option value="PORCENTAJE">Porcentaje (%)</option>
+                            <option value="MONTO_FIJO">Monto Fijo ($)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="promo-valor">Valor del Descuento</label>
+                        <input type="number" id="promo-valor" step="0.01" min="0.01" required placeholder="Ej: 15">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="promo-desde">Vigencia Desde</label>
+                        <input type="date" id="promo-desde" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="promo-hasta">Vigencia Hasta</label>
+                        <input type="date" id="promo-hasta" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Productos Incluidos (seleccione uno o más)</label>
+                    <div id="promo-lista-productos" class="checklist-box"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalPromocion()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Promoción</button>
                 </div>
             </form>
         </div>

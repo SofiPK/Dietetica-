@@ -1,8 +1,10 @@
 package com.vidanatural.dao;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
@@ -26,11 +28,11 @@ public class InicializadorBD {
                 stmt.executeUpdate("CREATE DATABASE IF NOT EXISTS vida_natural CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
             }
 
-            // 2. Crear Tablas e Insertar Datos
+            // 2. Crear Tablas, Migrar Columnas e Insertar Datos
             try (Connection conn = DriverManager.getConnection(URL_DB, USUARIO, CONTRASENA);
                  Statement stmt = conn.createStatement()) {
 
-                // Tabla usuario
+                // 1. Tabla usuario
                 stmt.executeUpdate(
                     "CREATE TABLE IF NOT EXISTS usuario (" +
                     "  id INT NOT NULL AUTO_INCREMENT," +
@@ -44,7 +46,7 @@ public class InicializadorBD {
                     ") ENGINE=InnoDB;"
                 );
 
-                // Tabla producto
+                // 2. Tabla producto
                 stmt.executeUpdate(
                     "CREATE TABLE IF NOT EXISTS producto (" +
                     "  codigo VARCHAR(30) NOT NULL," +
@@ -58,34 +60,137 @@ public class InicializadorBD {
                     ") ENGINE=InnoDB;"
                 );
 
-                // Tabla venta
+                // 3. Tabla cliente
+                stmt.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS cliente (" +
+                    "  id INT NOT NULL AUTO_INCREMENT," +
+                    "  dni_cuit VARCHAR(20) NULL," +
+                    "  nombre VARCHAR(100) NOT NULL," +
+                    "  apellido VARCHAR(100) NOT NULL," +
+                    "  telefono VARCHAR(30) NULL," +
+                    "  email VARCHAR(120) NULL," +
+                    "  acepta_promociones TINYINT(1) NOT NULL DEFAULT 1," +
+                    "  activo TINYINT(1) NOT NULL DEFAULT 1," +
+                    "  fecha_alta DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "  PRIMARY KEY (id)," +
+                    "  UNIQUE KEY uq_cliente_dni_cuit (dni_cuit)" +
+                    ") ENGINE=InnoDB;"
+                );
+
+                // 4. Tabla promocion
+                stmt.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS promocion (" +
+                    "  id INT NOT NULL AUTO_INCREMENT," +
+                    "  nombre VARCHAR(100) NOT NULL," +
+                    "  tipo_descuento ENUM('PORCENTAJE', 'MONTO_FIJO') NOT NULL," +
+                    "  valor DECIMAL(10,2) NOT NULL," +
+                    "  vigencia_desde DATE NOT NULL," +
+                    "  vigencia_hasta DATE NOT NULL," +
+                    "  activa TINYINT(1) NOT NULL DEFAULT 1," +
+                    "  PRIMARY KEY (id)" +
+                    ") ENGINE=InnoDB;"
+                );
+
+                // 5. Tabla promocion_producto (N:N)
+                stmt.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS promocion_producto (" +
+                    "  promocion_id INT NOT NULL," +
+                    "  producto_codigo VARCHAR(30) NOT NULL," +
+                    "  PRIMARY KEY (promocion_id, producto_codigo)," +
+                    "  FOREIGN KEY (promocion_id) REFERENCES promocion(id) ON DELETE CASCADE," +
+                    "  FOREIGN KEY (producto_codigo) REFERENCES producto(codigo) ON DELETE CASCADE" +
+                    ") ENGINE=InnoDB;"
+                );
+
+                // 6. Tabla caja
+                stmt.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS caja (" +
+                    "  id INT NOT NULL AUTO_INCREMENT," +
+                    "  usuario_apertura_id INT NOT NULL," +
+                    "  usuario_cierre_id INT NULL," +
+                    "  fecha_apertura DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "  fecha_cierre DATETIME NULL," +
+                    "  monto_inicial DECIMAL(10,2) NOT NULL," +
+                    "  monto_esperado DECIMAL(10,2) NULL," +
+                    "  monto_final_real DECIMAL(10,2) NULL," +
+                    "  diferencia DECIMAL(10,2) NULL," +
+                    "  estado ENUM('ABIERTA', 'CERRADA') NOT NULL DEFAULT 'ABIERTA'," +
+                    "  observaciones VARCHAR(255) NULL," +
+                    "  PRIMARY KEY (id)," +
+                    "  FOREIGN KEY (usuario_apertura_id) REFERENCES usuario(id)," +
+                    "  FOREIGN KEY (usuario_cierre_id) REFERENCES usuario(id)" +
+                    ") ENGINE=InnoDB;"
+                );
+
+                // 7. Tabla venta
                 stmt.executeUpdate(
                     "CREATE TABLE IF NOT EXISTS venta (" +
                     "  id INT NOT NULL AUTO_INCREMENT," +
                     "  fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
                     "  importe_total DECIMAL(10,2) NOT NULL DEFAULT 0.00," +
+                    "  descuento_total DECIMAL(10,2) NOT NULL DEFAULT 0.00," +
+                    "  medio_pago ENUM('EFECTIVO', 'TRANSFERENCIA', 'DEBITO_CREDITO') NOT NULL DEFAULT 'EFECTIVO'," +
                     "  estado VARCHAR(30) NOT NULL DEFAULT 'CONFIRMADA'," +
                     "  usuario_id INT NOT NULL," +
+                    "  cliente_id INT NULL," +
+                    "  caja_id INT NULL," +
                     "  PRIMARY KEY (id)," +
-                    "  FOREIGN KEY (usuario_id) REFERENCES usuario(id)" +
+                    "  FOREIGN KEY (usuario_id) REFERENCES usuario(id)," +
+                    "  FOREIGN KEY (cliente_id) REFERENCES cliente(id)," +
+                    "  FOREIGN KEY (caja_id) REFERENCES caja(id)" +
                     ") ENGINE=InnoDB;"
                 );
 
-                // Tabla detalle_venta
+                // Migración segura si la tabla 'venta' ya existía de una versión anterior
+                agregarColumnaSiNoExiste(conn, "venta", "descuento_total", "DECIMAL(10,2) NOT NULL DEFAULT 0.00");
+                agregarColumnaSiNoExiste(conn, "venta", "medio_pago", "ENUM('EFECTIVO', 'TRANSFERENCIA', 'DEBITO_CREDITO') NOT NULL DEFAULT 'EFECTIVO'");
+                agregarColumnaSiNoExiste(conn, "venta", "cliente_id", "INT NULL");
+                agregarColumnaSiNoExiste(conn, "venta", "caja_id", "INT NULL");
+
+                // 8. Tabla detalle_venta
                 stmt.executeUpdate(
                     "CREATE TABLE IF NOT EXISTS detalle_venta (" +
                     "  id INT NOT NULL AUTO_INCREMENT," +
                     "  venta_id INT NOT NULL," +
                     "  producto_codigo VARCHAR(30) NOT NULL," +
+                    "  promocion_id INT NULL," +
                     "  cantidad INT NOT NULL," +
+                    "  precio_unitario DECIMAL(10,2) NOT NULL DEFAULT 0.00," +
+                    "  descuento_aplicado DECIMAL(10,2) NOT NULL DEFAULT 0.00," +
                     "  subtotal DECIMAL(10,2) NOT NULL," +
                     "  PRIMARY KEY (id)," +
                     "  FOREIGN KEY (venta_id) REFERENCES venta(id)," +
-                    "  FOREIGN KEY (producto_codigo) REFERENCES producto(codigo)" +
+                    "  FOREIGN KEY (producto_codigo) REFERENCES producto(codigo)," +
+                    "  FOREIGN KEY (promocion_id) REFERENCES promocion(id)" +
                     ") ENGINE=InnoDB;"
                 );
 
-                // Insertar usuarios de prueba si no existen
+                // Migración segura si la tabla 'detalle_venta' ya existía
+                agregarColumnaSiNoExiste(conn, "detalle_venta", "promocion_id", "INT NULL");
+                agregarColumnaSiNoExiste(conn, "detalle_venta", "precio_unitario", "DECIMAL(10,2) NOT NULL DEFAULT 0.00");
+                agregarColumnaSiNoExiste(conn, "detalle_venta", "descuento_aplicado", "DECIMAL(10,2) NOT NULL DEFAULT 0.00");
+
+                // 9. Tabla movimiento_caja
+                stmt.executeUpdate(
+                    "CREATE TABLE IF NOT EXISTS movimiento_caja (" +
+                    "  id INT NOT NULL AUTO_INCREMENT," +
+                    "  caja_id INT NOT NULL," +
+                    "  venta_id INT NULL," +
+                    "  usuario_id INT NOT NULL," +
+                    "  tipo ENUM('VENTA', 'INGRESO_MANUAL', 'EGRESO_MANUAL') NOT NULL," +
+                    "  concepto VARCHAR(150) NOT NULL," +
+                    "  monto DECIMAL(10,2) NOT NULL," +
+                    "  fecha_hora DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP," +
+                    "  PRIMARY KEY (id)," +
+                    "  FOREIGN KEY (caja_id) REFERENCES caja(id)," +
+                    "  FOREIGN KEY (venta_id) REFERENCES venta(id)," +
+                    "  FOREIGN KEY (usuario_id) REFERENCES usuario(id)" +
+                    ") ENGINE=InnoDB;"
+                );
+
+                // ============================================================
+                // DATOS INICIALES (MOCKS DE PRUEBA)
+                // ============================================================
                 try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM usuario;")) {
                     if (rs.next() && rs.getInt(1) == 0) {
                         stmt.executeUpdate(
@@ -97,7 +202,6 @@ public class InicializadorBD {
                     }
                 }
 
-                // Insertar productos de prueba si no existen
                 try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM producto;")) {
                     if (rs.next() && rs.getInt(1) == 0) {
                         stmt.executeUpdate(
@@ -115,11 +219,58 @@ public class InicializadorBD {
                     }
                 }
 
+                try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM cliente;")) {
+                    if (rs.next() && rs.getInt(1) == 0) {
+                        stmt.executeUpdate(
+                            "INSERT INTO cliente (dni_cuit, nombre, apellido, telefono, email, acepta_promociones, activo) VALUES " +
+                            "('30123456', 'María', 'López', '2914112233', 'maria.lopez@email.com', 1, 1)," +
+                            "('27987654', 'Carlos', 'Pérez', '2915445566', 'carlos.perez@email.com', 1, 1);"
+                        );
+                        System.out.println("Clientes de prueba cargados.");
+                    }
+                }
+
+                try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM promocion;")) {
+                    if (rs.next() && rs.getInt(1) == 0) {
+                        stmt.executeUpdate(
+                            "INSERT INTO promocion (nombre, tipo_descuento, valor, vigencia_desde, vigencia_hasta, activa) VALUES " +
+                            "('Semana de Cereales 15% OFF', 'PORCENTAJE', 15.00, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 30 DAY), 1)," +
+                            "('Bono Suplemento Proteico -$1500', 'MONTO_FIJO', 1500.00, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 15 DAY), 1);"
+                        );
+                        stmt.executeUpdate(
+                            "INSERT INTO promocion_producto (promocion_id, producto_codigo) VALUES " +
+                            "(1, 'AV001'), (1, 'AV002'), (2, 'SU001');"
+                        );
+                        System.out.println("Promociones de prueba cargadas.");
+                    }
+                }
+
+                try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM caja;")) {
+                    if (rs.next() && rs.getInt(1) == 0) {
+                        stmt.executeUpdate(
+                            "INSERT INTO caja (usuario_apertura_id, fecha_apertura, monto_inicial, estado, observaciones) VALUES " +
+                            "(1, NOW(), 10000.00, 'ABIERTA', 'Caja inicial del turno');"
+                        );
+                        System.out.println("Caja inicial abierta.");
+                    }
+                }
+
                 System.out.println("Base de datos 'vida_natural' verificada y lista.");
             }
 
         } catch (Exception e) {
             System.err.println("Advertencia al inicializar BD: " + e.getMessage());
+        }
+    }
+
+    private static void agregarColumnaSiNoExiste(Connection conn, String tabla, String columna, String definicion) throws SQLException {
+        DatabaseMetaData meta = conn.getMetaData();
+        try (ResultSet rs = meta.getColumns("vida_natural", null, tabla, columna)) {
+            if (!rs.next()) {
+                try (Statement stmt = conn.createStatement()) {
+                    stmt.executeUpdate("ALTER TABLE " + tabla + " ADD COLUMN " + columna + " " + definicion + ";");
+                }
+            }
         }
     }
 }
