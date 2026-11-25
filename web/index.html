@@ -51,6 +51,42 @@
             padding: 3rem 2.75rem;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
         }
+        .th-filter-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            padding: 0.35rem 0.55rem;
+            font-family: inherit;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            color: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+        .th-filter-btn:hover {
+            background-color: #e2e8f0;
+            color: #0f172a;
+        }
+        .th-filter-btn.active {
+            background-color: #dcfce7;
+            border-color: #86efac;
+            color: #15803d;
+        }
+        .th-filter-icon {
+            font-size: 0.7rem;
+            opacity: 0.75;
+        }
+        .section-title-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
     </style>
 </head>
 <body>
@@ -196,6 +232,7 @@
                         <span class="arrow-down">&#9662;</span>
                     </button>
                     <div id="user-dropdown-menu" class="user-dropdown-content" style="display:none;">
+                        <button class="dropdown-item" onclick="abrirModalCambiarPassword()">Mi Contraseña</button>
                         <button class="dropdown-item text-danger" onclick="cerrarSesion()">Cerrar sesión</button>
                     </div>
                 </div>
@@ -209,9 +246,6 @@
                     <button class="nav-item active" id="nav-ventas" onclick="cambiarSeccion('ventas')">
                         Registrar Venta
                     </button>
-                    <button class="nav-item" id="nav-caja" onclick="cambiarSeccion('caja')">
-                        Control de Caja
-                    </button>
                     <button class="nav-item" id="nav-historial-ventas" onclick="cambiarSeccion('historial-ventas')">
                         Historial de Ventas
                     </button>
@@ -219,16 +253,19 @@
                         Inventario de Productos
                     </button>
                     <button class="nav-item" id="nav-clientes" onclick="cambiarSeccion('clientes')">
-                        Clientes
+                        Clientes y Promociones
                     </button>
                     <button class="nav-item" id="nav-promociones" onclick="cambiarSeccion('promociones')">
-                        Promociones
+                        Promociones Vigentes
                     </button>
-                    <button class="nav-item" id="nav-stock-bajo" onclick="cambiarSeccion('stock-bajo')">
-                        Control de Stock Mínimo
+                    <button class="nav-item" id="nav-caja" onclick="cambiarSeccion('caja')">
+                        Caja y Movimientos
                     </button>
                     <button class="nav-item" id="nav-recaudacion" onclick="cambiarSeccion('recaudacion')">
                         Reporte de Recaudación
+                    </button>
+                    <button class="nav-item" id="nav-usuarios" style="display:none;" onclick="cambiarSeccion('usuarios')">
+                        Gestión de Usuarios
                     </button>
                 </nav>
             </aside>
@@ -512,17 +549,50 @@
                             <table class="table">
                                 <thead>
                                     <tr>
-                                        <th>Venta #</th>
-                                        <th>Fecha y Hora</th>
-                                        <th>Artículos Vendidos</th>
-                                        <th>Medio de Pago</th>
-                                        <th>Descuento</th>
-                                        <th>Total</th>
-                                        <th>Estado</th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-venta-btn-id" onclick="ordenarVentasPor('id')">
+                                                Venta # <span class="th-filter-icon" id="th-venta-icon-id">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-venta-btn-fecha" onclick="ordenarVentasPor('fecha')">
+                                                Fecha y Hora <span class="th-filter-icon" id="th-venta-icon-fecha">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-venta-btn-articulos" onclick="ordenarVentasPor('articulos')">
+                                                Artículos Vendidos <span class="th-filter-icon" id="th-venta-icon-articulos">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-venta-btn-medioPago" onclick="ordenarVentasPor('medioPago')">
+                                                Medio de Pago <span class="th-filter-icon" id="th-venta-icon-medioPago">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-venta-btn-descuentoTotal" onclick="ordenarVentasPor('descuentoTotal')">
+                                                Descuento <span class="th-filter-icon" id="th-venta-icon-descuentoTotal">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-venta-btn-importeTotal" onclick="ordenarVentasPor('importeTotal')">
+                                                Total <span class="th-filter-icon" id="th-venta-icon-importeTotal">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-venta-btn-estado" onclick="ordenarVentasPor('estado')">
+                                                Estado <span class="th-filter-icon" id="th-venta-icon-estado">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" onclick="limpiarFiltrosHistorial()" title="Restablecer filtros y orden">
+                                                Comprobante
+                                            </button>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody id="tbody-historial-erp">
-                                    <tr><td colspan="7">Cargando ventas...</td></tr>
+                                    <tr><td colspan="8">Cargando ventas...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -532,10 +602,13 @@
                 <!-- SECCIÓN 4: INVENTARIO DE PRODUCTOS -->
                 <section id="seccion-productos" class="seccion-view" style="display:none;">
                     <header class="section-heading flex-between">
-                        <div>
+                        <div class="section-title-group">
                             <h2>Inventario de Productos</h2>
+                            <button type="button" class="btn btn-secondary" onclick="cambiarSeccion('stock-bajo')">
+                                Control de Stock Mínimo
+                            </button>
                         </div>
-                        <button class="btn btn-primary" onclick="abrirModalProducto()">+ Registrar Nuevo Producto</button>
+                        <button id="btn-nuevo-producto" class="btn btn-primary" onclick="abrirModalProducto()">+ Registrar Nuevo Producto</button>
                     </header>
 
                     <div class="card">
@@ -547,14 +620,46 @@
                             <table class="table">
                                 <thead>
                                     <tr>
-                                        <th>Código</th>
-                                        <th>Descripción</th>
-                                        <th>Categoría</th>
-                                        <th>Precio Unitario</th>
-                                        <th>Stock Actual</th>
-                                        <th>Stock Mínimo</th>
-                                        <th>Estado</th>
-                                        <th>Acciones</th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-btn-codigo" onclick="ordenarProductosPor('codigo')">
+                                                Código <span class="th-filter-icon" id="th-icon-codigo">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-btn-descripcion" onclick="ordenarProductosPor('descripcion')">
+                                                Descripción <span class="th-filter-icon" id="th-icon-descripcion">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-btn-categoria" onclick="ordenarProductosPor('categoria')">
+                                                Categoría <span class="th-filter-icon" id="th-icon-categoria">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-btn-precioUnitario" onclick="ordenarProductosPor('precioUnitario')">
+                                                Precio Unitario <span class="th-filter-icon" id="th-icon-precioUnitario">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-btn-stockActual" onclick="ordenarProductosPor('stockActual')">
+                                                Stock Actual <span class="th-filter-icon" id="th-icon-stockActual">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-btn-stockMinimo" onclick="ordenarProductosPor('stockMinimo')">
+                                                Stock Mínimo <span class="th-filter-icon" id="th-icon-stockMinimo">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-btn-activo" onclick="ordenarProductosPor('activo')">
+                                                Estado <span class="th-filter-icon" id="th-icon-activo">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-btn-acciones" onclick="limpiarOrdenProductos()" title="Restablecer filtros y orden">
+                                                Acciones
+                                            </button>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody id="tbody-productos">
@@ -581,13 +686,25 @@
                             <table class="table">
                                 <thead>
                                     <tr>
-                                        <th>DNI / CUIT</th>
-                                        <th>Nombre y Apellido</th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-cli-btn-dniCuit" onclick="ordenarClientesPor('dniCuit')">
+                                                DNI / CUIT <span class="th-filter-icon" id="th-cli-icon-dniCuit">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-cli-btn-nombreApellido" onclick="ordenarClientesPor('nombreApellido')">
+                                                Nombre y Apellido <span class="th-filter-icon" id="th-cli-icon-nombreApellido">&#8693;</span>
+                                            </button>
+                                        </th>
                                         <th>Teléfono</th>
                                         <th>Correo Electrónico</th>
                                         <th>Difusión Promos</th>
                                         <th>Estado</th>
-                                        <th>Acciones</th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" onclick="limpiarOrdenClientes()" title="Restablecer filtros y orden">
+                                                Acciones
+                                            </button>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody id="tbody-clientes">
@@ -628,8 +745,11 @@
 
                 <!-- SECCIÓN 7: CONTROL DE STOCK MÍNIMO -->
                 <section id="seccion-stock-bajo" class="seccion-view" style="display:none;">
-                    <header class="section-heading">
+                    <header class="section-heading flex-between">
                         <h2>Control de Stock Mínimo</h2>
+                        <button type="button" class="btn btn-secondary" onclick="cambiarSeccion('productos')">
+                            &larr; Volver a Inventario
+                        </button>
                     </header>
 
                     <div class="card">
@@ -734,6 +854,39 @@
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECCIÓN 9: GESTIÓN DE USUARIOS (SOLO GERENTE) -->
+                <section id="seccion-usuarios" class="seccion-view" style="display:none;">
+                    <header class="section-heading flex-between">
+                        <h2>Gestión de Usuarios y Perfiles</h2>
+                        <button type="button" class="btn btn-primary" onclick="abrirModalUsuario()">+ Registrar Usuario</button>
+                    </header>
+
+                    <div id="usuarios-alerta" class="alert" style="display:none;"></div>
+
+                    <div class="card">
+                        <div class="search-bar">
+                            <input type="text" id="filtro-usuarios" placeholder="Buscar por nombre de usuario, nombre, apellido o perfil" oninput="filtrarUsuarios()">
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Nombre y Apellido</th>
+                                        <th>Perfil</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-usuarios">
+                                    <tr><td colspan="5">Cargando usuarios...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </section>
@@ -879,6 +1032,147 @@
                     <button type="submit" class="btn btn-primary">Guardar Promoción</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL: REGISTRAR / MODIFICAR USUARIO (SOLO GERENTE) -->
+    <div id="modal-usuario" class="modal-backdrop" style="display:none;">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h3 id="modal-usuario-titulo">Registrar Usuario</h3>
+                <button class="btn-close" onclick="cerrarModalUsuario()">&times;</button>
+            </header>
+            <div id="modal-usuario-error" class="alert alert-error" style="display:none;"></div>
+            <form id="form-usuario" onsubmit="guardarUsuario(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="usr-username">Nombre de Usuario</label>
+                        <input type="text" id="usr-username" required placeholder="Ej: admin02">
+                    </div>
+                    <div class="form-group">
+                        <label for="usr-perfil">Perfil de Acceso</label>
+                        <select id="usr-perfil" required>
+                            <option value="ADMINISTRATIVO">Administrativo</option>
+                            <option value="GERENTE">Gerente</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="usr-nombre">Nombre</label>
+                        <input type="text" id="usr-nombre" required placeholder="Ej: Sofía">
+                    </div>
+                    <div class="form-group">
+                        <label for="usr-apellido">Apellido</label>
+                        <input type="text" id="usr-apellido" required placeholder="Ej: Gómez">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="usr-password" id="usr-password-label">Contraseña (mínimo 4 caracteres)</label>
+                    <input type="password" id="usr-password" minlength="4" placeholder="Ingrese contraseña">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalUsuario()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CAMBIAR MI CONTRASEÑA (AMBOS PERFILES - DATOS FIJOS DE SOLO LECTURA) -->
+    <div id="modal-cambiar-password" class="modal-backdrop" style="display:none;">
+        <div class="modal-card" style="max-width: 480px;">
+            <header class="modal-header">
+                <h3>Mi Cuenta — Cambiar Contraseña</h3>
+                <button class="btn-close" onclick="cerrarModalCambiarPassword()">&times;</button>
+            </header>
+            <div id="modal-pass-alerta" class="alert" style="display:none;"></div>
+
+            <div class="info-box" style="margin-bottom: 1rem; font-size: 0.88rem;">
+                <div class="info-grid">
+                    <div><strong>Usuario:</strong> <span id="mi-cuenta-username">-</span></div>
+                    <div><strong>Perfil:</strong> <span id="mi-cuenta-perfil">-</span></div>
+                    <div style="grid-column: span 2;"><strong>Nombre y Apellido:</strong> <span id="mi-cuenta-nombre">-</span></div>
+                </div>
+            </div>
+
+            <form id="form-cambiar-password" onsubmit="guardarCambioContrasenaPropia(event)">
+                <div class="form-group">
+                    <label for="mi-pass-actual">Contraseña Actual</label>
+                    <input type="password" id="mi-pass-actual" required placeholder="Ingrese su contraseña actual">
+                </div>
+                <div class="form-group">
+                    <label for="mi-pass-nueva">Nueva Contraseña (mínimo 4 caracteres)</label>
+                    <input type="password" id="mi-pass-nueva" minlength="4" required placeholder="Ingrese la nueva contraseña">
+                </div>
+                <div class="form-group">
+                    <label for="mi-pass-confirmar">Confirmar Nueva Contraseña</label>
+                    <input type="password" id="mi-pass-confirmar" minlength="4" required placeholder="Repita la nueva contraseña">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModalCambiarPassword()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Actualizar Contraseña</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: COMPROBANTE / REMITO DE VENTA IMPRIMIBLE -->
+    <div id="modal-remito" class="modal-backdrop" style="display:none;">
+        <div class="modal-card remito-printable" style="max-width: 680px;">
+            <header class="modal-header no-print">
+                <h3>Comprobante de Venta / Remito</h3>
+                <button class="btn-close" onclick="cerrarModalRemito()">&times;</button>
+            </header>
+
+            <div id="remito-contenido" class="remito-body">
+                <div class="flex-between" style="border-bottom: 2px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <h2 style="margin: 0; color: #15803d;">Vida Natural</h2>
+                        <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: #64748b;">Dietética Comercial — Comprobante Interno de Venta</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.1rem; font-weight: 700;">REMITO <span id="remito-numero">#0000</span></div>
+                        <div style="font-size: 0.85rem; color: #64748b;" id="remito-fecha">-</div>
+                    </div>
+                </div>
+
+                <div class="info-grid" style="margin-bottom: 1rem; font-size: 0.9rem;">
+                    <div><strong>Cliente:</strong> <span id="remito-cliente">Consumidor Final</span></div>
+                    <div><strong>Medio de Pago:</strong> <span id="remito-medio-pago">-</span></div>
+                    <div><strong>Estado:</strong> <span id="remito-estado">-</span></div>
+                    <div><strong>Operador:</strong> <span id="remito-operador">-</span></div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th>Cant.</th>
+                                <th>Precio Unit.</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="remito-tbody-items"></tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 1rem; border-top: 1px solid #e2e8f0; padding-top: 0.8rem; text-align: right;">
+                    <div id="remito-fila-descuento" style="display:none; font-size: 0.9rem; color: #b45309; margin-bottom: 0.3rem;">
+                        Descuento aplicado: <strong id="remito-descuento">-$0.00</strong>
+                    </div>
+                    <div style="font-size: 1.2rem; font-weight: 700;">
+                        Total Cobrado: <span id="remito-total">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer no-print">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModalRemito()">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="imprimirRemito()">Imprimir Remito</button>
+            </div>
         </div>
     </div>
 

@@ -11,18 +11,27 @@ let listaProductosGlobal = [];
 let listaVentasGlobal = [];
 let listaClientesGlobal = [];
 let listaPromocionesGlobal = [];
+let listaUsuariosGlobal = [];
 let cajaActualGlobal = null;
 let editandoProductoCodigo = null;
 let editandoClienteId = null;
 let editandoPromoId = null;
+let editandoUsuarioId = null;
+let ordenProductosColumna = null;
+let ordenProductosAsc = true;
+let ordenVentasColumna = null;
+let ordenVentasAsc = true;
+let ordenClientesColumna = null;
+let ordenClientesAsc = true;
 
-// Interceptor global de fetch para enviar el perfil en cada petición API
+// Interceptor global de fetch para enviar perfil e ID de usuario en cada petición API
 const fetchOriginal = window.fetch;
 window.fetch = function(url, options = {}) {
-    if (typeof url === "string" && url.startsWith("/api/") && usuarioActual && usuarioActual.perfil) {
+    if (typeof url === "string" && url.startsWith("/api/") && usuarioActual) {
         options.headers = {
             ...(options.headers || {}),
-            "X-User-Perfil": usuarioActual.perfil
+            ...(usuarioActual.perfil ? { "X-User-Perfil": usuarioActual.perfil } : {}),
+            ...(usuarioActual.id ? { "X-User-Id": String(usuarioActual.id) } : {})
         };
     }
     return fetchOriginal(url, options);
@@ -201,11 +210,12 @@ function mostrarPanelPrincipal() {
     document.getElementById("nav-ventas").style.display = esAdmin ? "block" : "none";
     document.getElementById("nav-caja").style.display = "block";
     document.getElementById("nav-historial-ventas").style.display = "block";
-    document.getElementById("nav-productos").style.display = esAdmin ? "block" : "none";
+    document.getElementById("nav-productos").style.display = "block";
     document.getElementById("nav-clientes").style.display = "block";
     document.getElementById("nav-promociones").style.display = "block";
-    document.getElementById("nav-stock-bajo").style.display = "block";
     document.getElementById("nav-recaudacion").style.display = esAdmin ? "none" : "block";
+    const navUsuarios = document.getElementById("nav-usuarios");
+    if (navUsuarios) navUsuarios.style.display = esAdmin ? "none" : "block";
 
     verificarEstadoCajaGlobal();
 
@@ -222,7 +232,7 @@ function mostrarPanelPrincipal() {
 function cambiarSeccion(seccion) {
     const esAdmin = usuarioActual && usuarioActual.perfil === "ADMINISTRATIVO";
     const seccionesAdmin = ["ventas", "caja", "historial-ventas", "productos", "clientes", "promociones", "stock-bajo"];
-    const seccionesGerente = ["caja", "historial-ventas", "clientes", "promociones", "stock-bajo", "recaudacion"];
+    const seccionesGerente = ["caja", "historial-ventas", "productos", "clientes", "promociones", "stock-bajo", "recaudacion", "usuarios"];
 
     if (esAdmin && !seccionesAdmin.includes(seccion)) {
         seccion = "ventas";
@@ -234,7 +244,8 @@ function cambiarSeccion(seccion) {
     document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
 
     const target = document.getElementById(`seccion-${seccion}`);
-    const navBtn = document.getElementById(`nav-${seccion}`);
+    const navKey = (seccion === "stock-bajo") ? "productos" : seccion;
+    const navBtn = document.getElementById(`nav-${navKey}`);
     if (target) target.style.display = "block";
     if (navBtn) navBtn.classList.add("active");
 
@@ -250,6 +261,7 @@ function cambiarSeccion(seccion) {
     if (seccion === "promociones") cargarPromociones();
     if (seccion === "stock-bajo") cargarStockBajo();
     if (seccion === "recaudacion") consultarRecaudacion();
+    if (seccion === "usuarios") cargarUsuarios();
 }
 
 // ============================================================
@@ -598,7 +610,6 @@ async function buscarProductoParaVenta(silencioso = false) {
             return null;
         }
 
-        // Consultar si existe una promoción vigente para este producto
         let promo = null;
         try {
             const resPromo = await fetch(`/api/promociones/vigente?codigo=${encodeURIComponent(prod.codigo)}`);
@@ -758,8 +769,13 @@ async function confirmarVentaFinal() {
         return;
     }
 
-    const clienteVal = document.getElementById("venta-cliente").value;
+    const clienteSelect = document.getElementById("venta-cliente");
+    const clienteVal = clienteSelect.value;
+    const clienteTexto = clienteVal ? clienteSelect.options[clienteSelect.selectedIndex].text : "Consumidor Final";
     const medioPago = document.getElementById("venta-medio-pago").value;
+
+    const itemsSnapshot = carritoActual.map(item => ({ ...item }));
+    const descuentoSnapshot = carritoActual.reduce((s, i) => s + (i.descuentoAplicado || 0), 0);
 
     const payload = {
         usuarioId: usuarioActual.id,
@@ -781,8 +797,26 @@ async function confirmarVentaFinal() {
 
         const data = await res.json();
         if (res.ok && data.exito) {
-            const totalCobrado = data.importeTotal !== undefined ? data.importeTotal : carritoActual.reduce((s, i) => s + i.subtotal, 0);
-            alert(`Venta #${data.ventaId || ""} registrada con éxito por $${totalCobrado.toFixed(2)} (${medioPago}).`);
+            const totalCobrado = data.importeTotal !== undefined ? data.importeTotal : itemsSnapshot.reduce((s, i) => s + i.subtotal, 0);
+
+            const ventaParaRemito = {
+                id: data.ventaId || "-",
+                fecha: new Date().toISOString(),
+                clienteNombre: clienteTexto,
+                medioPago: medioPago,
+                descuentoTotal: descuentoSnapshot,
+                importeTotal: totalCobrado,
+                estado: "CONFIRMADA",
+                operador: `${usuarioActual.nombre} ${usuarioActual.apellido}`,
+                detalles: itemsSnapshot.map(i => ({
+                    productoCodigo: i.codigo,
+                    descripcion: i.descripcion,
+                    cantidad: i.cantidad,
+                    precioUnitario: i.precioUnitario,
+                    subtotal: i.subtotal
+                }))
+            };
+
             carritoActual = [];
             renderizarCarrito();
             document.getElementById("venta-cliente").value = "";
@@ -790,6 +824,8 @@ async function confirmarVentaFinal() {
             document.getElementById("venta-alerta").style.display = "none";
             cargarDatalistProductosVenta();
             verificarEstadoCajaGlobal();
+
+            abrirModalRemitoDesdeObjeto(ventaParaRemito);
         } else {
             mostrarAlertaVenta(data.error || "No se pudo registrar la venta.", "error");
         }
@@ -806,16 +842,91 @@ function mostrarAlertaVenta(mensaje, tipo) {
 }
 
 // ============================================================
-// HISTORIAL DE VENTAS
+// HISTORIAL DE VENTAS (CON BOTONES DE FILTRO / ORDEN) Y REMITO
 // ============================================================
 async function cargarHistorialVentasERP() {
     try {
         const res = await fetch("/api/ventas");
         listaVentasGlobal = await res.json();
-        renderizarHistorialVentas(listaVentasGlobal);
+        aplicarFiltroYOrdenVentas();
     } catch (err) {
         console.error("Error al cargar historial de ventas:", err);
     }
+}
+
+function ordenarVentasPor(columna) {
+    if (ordenVentasColumna === columna) {
+        ordenVentasAsc = !ordenVentasAsc;
+    } else {
+        ordenVentasColumna = columna;
+        ordenVentasAsc = true;
+    }
+    actualizarIconosOrdenVentas();
+    aplicarFiltroYOrdenVentas();
+}
+
+function actualizarIconosOrdenVentas() {
+    const columnas = ["id", "fecha", "articulos", "medioPago", "descuentoTotal", "importeTotal", "estado"];
+    columnas.forEach(col => {
+        const btn = document.getElementById(`th-venta-btn-${col}`);
+        const icon = document.getElementById(`th-venta-icon-${col}`);
+        if (!btn || !icon) return;
+
+        if (ordenVentasColumna === col) {
+            btn.classList.add("active");
+            icon.innerHTML = ordenVentasAsc ? "&#9650;" : "&#9660;";
+        } else {
+            btn.classList.remove("active");
+            icon.innerHTML = "&#8693;";
+        }
+    });
+}
+
+function aplicarFiltroYOrdenVentas() {
+    const txt = (document.getElementById("historial-buscar-texto")?.value || "").toLowerCase().trim();
+    const desde = document.getElementById("historial-desde")?.value || "";
+    const hasta = document.getElementById("historial-hasta")?.value || "";
+
+    let resultado = listaVentasGlobal.filter(v => {
+        let coincideTexto = true;
+        if (txt) {
+            coincideTexto = (v.detalles || []).some(d =>
+                (d.productoCodigo && d.productoCodigo.toLowerCase().includes(txt)) ||
+                (d.descripcion && d.descripcion.toLowerCase().includes(txt))
+            ) || String(v.id).includes(txt) || (v.medioPago && v.medioPago.toLowerCase().includes(txt));
+        }
+        let coincideFecha = true;
+        if (v.fecha) {
+            const fechaVenta = v.fecha.substring(0, 10);
+            if (desde && fechaVenta < desde) coincideFecha = false;
+            if (hasta && fechaVenta > hasta) coincideFecha = false;
+        }
+        return coincideTexto && coincideFecha;
+    });
+
+    if (ordenVentasColumna) {
+        resultado = [...resultado].sort((a, b) => {
+            let valA;
+            let valB;
+
+            if (ordenVentasColumna === "articulos") {
+                valA = (a.detalles || []).map(d => d.descripcion || d.productoCodigo || "").join(", ").toLowerCase();
+                valB = (b.detalles || []).map(d => d.descripcion || d.productoCodigo || "").join(", ").toLowerCase();
+            } else if (ordenVentasColumna === "descuentoTotal" || ordenVentasColumna === "importeTotal" || ordenVentasColumna === "id") {
+                valA = Number(a[ordenVentasColumna] || 0);
+                valB = Number(b[ordenVentasColumna] || 0);
+            } else {
+                valA = String(a[ordenVentasColumna] || "").toLowerCase();
+                valB = String(b[ordenVentasColumna] || "").toLowerCase();
+            }
+
+            if (valA < valB) return ordenVentasAsc ? -1 : 1;
+            if (valA > valB) return ordenVentasAsc ? 1 : -1;
+            return 0;
+        });
+    }
+
+    renderizarHistorialVentas(resultado);
 }
 
 function renderizarHistorialVentas(ventas) {
@@ -824,7 +935,7 @@ function renderizarHistorialVentas(ventas) {
     document.getElementById("historial-ventas-contador").textContent = `${ventas.length} ventas`;
 
     if (!ventas || ventas.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center">No se encontraron ventas registradas.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center">No se encontraron ventas registradas.</td></tr>`;
         return;
     }
 
@@ -843,57 +954,170 @@ function renderizarHistorialVentas(ventas) {
             <td>${v.descuentoTotal > 0 ? `-$${v.descuentoTotal.toFixed(2)}` : "-"}</td>
             <td><strong>$${v.importeTotal.toFixed(2)}</strong></td>
             <td><span class="badge badge-success">${v.estado}</span></td>
+            <td>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="verRemito(${v.id})">Ver Remito</button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
 }
 
-function filtrarHistorialVentas() {
-    const txt = document.getElementById("historial-buscar-texto").value.toLowerCase().trim();
-    const desde = document.getElementById("historial-desde").value;
-    const hasta = document.getElementById("historial-hasta").value;
+function verRemito(ventaId) {
+    const venta = listaVentasGlobal.find(v => v.id === ventaId);
+    if (!venta) {
+        alert("No se encontró el detalle de la venta seleccionada.");
+        return;
+    }
+    abrirModalRemitoDesdeObjeto(venta);
+}
 
-    const filtradas = listaVentasGlobal.filter(v => {
-        let coincideTexto = true;
-        if (txt) {
-            coincideTexto = (v.detalles || []).some(d =>
-                (d.productoCodigo && d.productoCodigo.toLowerCase().includes(txt)) ||
-                (d.descripcion && d.descripcion.toLowerCase().includes(txt))
-            );
-        }
-        let coincideFecha = true;
-        if (v.fecha) {
-            const fechaVenta = v.fecha.substring(0, 10);
-            if (desde && fechaVenta < desde) coincideFecha = false;
-            if (hasta && fechaVenta > hasta) coincideFecha = false;
-        }
-        return coincideTexto && coincideFecha;
+function abrirModalRemitoDesdeObjeto(venta) {
+    const fechaFmt = venta.fecha ? venta.fecha.replace("T", " ").substring(0, 19) : "-";
+    document.getElementById("remito-numero").textContent = `#${venta.id}`;
+    document.getElementById("remito-fecha").textContent = fechaFmt;
+    document.getElementById("remito-cliente").textContent = venta.clienteNombre || "Consumidor Final";
+    document.getElementById("remito-medio-pago").textContent = venta.medioPago || "EFECTIVO";
+    document.getElementById("remito-estado").textContent = venta.estado || "CONFIRMADA";
+    document.getElementById("remito-operador").textContent = venta.operador || (usuarioActual ? `${usuarioActual.nombre} ${usuarioActual.apellido}` : "-");
+
+    const tbody = document.getElementById("remito-tbody-items");
+    tbody.innerHTML = "";
+    (venta.detalles || []).forEach(d => {
+        const precioUnit = d.precioUnitario !== undefined
+            ? d.precioUnitario
+            : (d.cantidad > 0 ? d.subtotal / d.cantidad : 0);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><code>${d.productoCodigo}</code></td>
+            <td>${d.descripcion || "-"}</td>
+            <td>${d.cantidad}</td>
+            <td>$${precioUnit.toFixed(2)}</td>
+            <td><strong>$${(d.subtotal || 0).toFixed(2)}</strong></td>
+        `;
+        tbody.appendChild(tr);
     });
 
-    renderizarHistorialVentas(filtradas);
+    const filaDesc = document.getElementById("remito-fila-descuento");
+    if (venta.descuentoTotal && venta.descuentoTotal > 0) {
+        filaDesc.style.display = "block";
+        document.getElementById("remito-descuento").textContent = `-$${venta.descuentoTotal.toFixed(2)}`;
+    } else {
+        filaDesc.style.display = "none";
+    }
+
+    document.getElementById("remito-total").textContent = `$${(venta.importeTotal || 0).toFixed(2)}`;
+    document.getElementById("modal-remito").style.display = "flex";
+}
+
+function cerrarModalRemito() {
+    document.getElementById("modal-remito").style.display = "none";
+}
+
+function imprimirRemito() {
+    window.print();
+}
+
+function filtrarHistorialVentas() {
+    aplicarFiltroYOrdenVentas();
 }
 
 function limpiarFiltrosHistorial() {
+    ordenVentasColumna = null;
+    ordenVentasAsc = true;
     document.getElementById("historial-buscar-texto").value = "";
     document.getElementById("historial-desde").value = "";
     document.getElementById("historial-hasta").value = "";
-    renderizarHistorialVentas(listaVentasGlobal);
+    actualizarIconosOrdenVentas();
+    aplicarFiltroYOrdenVentas();
 }
 
 // ============================================================
-// 4. INVENTARIO DE PRODUCTOS
+// 4. INVENTARIO DE PRODUCTOS (CON BOTONES DE FILTRO / ORDEN)
 // ============================================================
 async function cargarProductos() {
+    const esAdmin = usuarioActual && usuarioActual.perfil === "ADMINISTRATIVO";
+    const btnNuevo = document.getElementById("btn-nuevo-producto");
+    if (btnNuevo) btnNuevo.style.display = esAdmin ? "inline-flex" : "none";
+
     try {
         const res = await fetch("/api/productos");
         listaProductosGlobal = await res.json();
-        renderizarTablaProductos(listaProductosGlobal);
+        aplicarFiltroYOrdenProductos();
     } catch (err) {
         console.error("Error al cargar productos:", err);
     }
 }
 
+function ordenarProductosPor(columna) {
+    if (ordenProductosColumna === columna) {
+        ordenProductosAsc = !ordenProductosAsc;
+    } else {
+        ordenProductosColumna = columna;
+        ordenProductosAsc = true;
+    }
+    actualizarIconosOrdenProductos();
+    aplicarFiltroYOrdenProductos();
+}
+
+function limpiarOrdenProductos() {
+    ordenProductosColumna = null;
+    ordenProductosAsc = true;
+    const inputFiltro = document.getElementById("filtro-productos");
+    if (inputFiltro) inputFiltro.value = "";
+    actualizarIconosOrdenProductos();
+    aplicarFiltroYOrdenProductos();
+}
+
+function actualizarIconosOrdenProductos() {
+    const columnas = ["codigo", "descripcion", "categoria", "precioUnitario", "stockActual", "stockMinimo", "activo"];
+    columnas.forEach(col => {
+        const btn = document.getElementById(`th-btn-${col}`);
+        const icon = document.getElementById(`th-icon-${col}`);
+        if (!btn || !icon) return;
+
+        if (ordenProductosColumna === col) {
+            btn.classList.add("active");
+            icon.innerHTML = ordenProductosAsc ? "&#9650;" : "&#9660;";
+        } else {
+            btn.classList.remove("active");
+            icon.innerHTML = "&#8693;";
+        }
+    });
+}
+
+function aplicarFiltroYOrdenProductos() {
+    const txt = (document.getElementById("filtro-productos")?.value || "").toLowerCase().trim();
+    let resultado = listaProductosGlobal.filter(p =>
+        p.codigo.toLowerCase().includes(txt) ||
+        p.descripcion.toLowerCase().includes(txt) ||
+        p.categoria.toLowerCase().includes(txt)
+    );
+
+    if (ordenProductosColumna) {
+        resultado = [...resultado].sort((a, b) => {
+            let valA = a[ordenProductosColumna];
+            let valB = b[ordenProductosColumna];
+
+            if (typeof valA === "boolean") {
+                valA = valA ? 1 : 0;
+                valB = valB ? 1 : 0;
+            } else if (typeof valA === "string") {
+                valA = valA.toLowerCase();
+                valB = valB.toLowerCase();
+            }
+
+            if (valA < valB) return ordenProductosAsc ? -1 : 1;
+            if (valA > valB) return ordenProductosAsc ? 1 : -1;
+            return 0;
+        });
+    }
+
+    renderizarTablaProductos(resultado);
+}
+
 function renderizarTablaProductos(productos) {
+    const esAdmin = usuarioActual && usuarioActual.perfil === "ADMINISTRATIVO";
     const tbody = document.getElementById("tbody-productos");
     tbody.innerHTML = "";
 
@@ -903,6 +1127,14 @@ function renderizarTablaProductos(productos) {
     }
 
     productos.forEach(p => {
+        const accionesHtml = esAdmin
+            ? `<button class="btn btn-secondary btn-sm" onclick="editarProducto('${p.codigo}')">Modificar</button>
+               ${p.activo 
+                   ? `<button class="btn btn-outline-danger btn-sm" onclick="darBajaProducto('${p.codigo}')">Baja</button>` 
+                   : `<button class="btn btn-success btn-sm" onclick="reactivarProducto('${p.codigo}')">Activar</button>`
+               }`
+            : `<span class="badge">Solo lectura</span>`;
+
         const tr = document.createElement("tr");
         tr.innerHTML = `
             <td><code>${p.codigo}</code></td>
@@ -916,24 +1148,14 @@ function renderizarTablaProductos(productos) {
                     ${p.activo ? 'Activo' : 'Inactivo'}
                 </span>
             </td>
-            <td style="white-space: nowrap;">
-                <button class="btn btn-secondary btn-sm" onclick="editarProducto('${p.codigo}')">Modificar</button>
-                ${p.activo 
-                    ? `<button class="btn btn-outline-danger btn-sm" onclick="darBajaProducto('${p.codigo}')">Baja</button>` 
-                    : `<button class="btn btn-success btn-sm" onclick="reactivarProducto('${p.codigo}')">Activar</button>`
-                }
-            </td>
+            <td style="white-space: nowrap;">${accionesHtml}</td>
         `;
         tbody.appendChild(tr);
     });
 }
 
 function filtrarProductos() {
-    const txt = document.getElementById("filtro-productos").value.toLowerCase();
-    const filtrados = listaProductosGlobal.filter(p => 
-        p.codigo.toLowerCase().includes(txt) || p.descripcion.toLowerCase().includes(txt)
-    );
-    renderizarTablaProductos(filtrados);
+    aplicarFiltroYOrdenProductos();
 }
 
 function abrirModalProducto() {
@@ -1045,7 +1267,7 @@ async function reactivarProducto(codigo) {
 }
 
 // ============================================================
-// 5. MÓDULO DE CLIENTES
+// 5. MÓDULO DE CLIENTES (CON ORDEN POR DNI Y NOMBRE/APELLIDO)
 // ============================================================
 async function cargarClientes() {
     const esAdmin = usuarioActual && usuarioActual.perfil === "ADMINISTRATIVO";
@@ -1055,10 +1277,82 @@ async function cargarClientes() {
     try {
         const res = await fetch("/api/clientes");
         listaClientesGlobal = await res.json();
-        renderizarTablaClientes(listaClientesGlobal);
+        aplicarFiltroYOrdenClientes();
     } catch (err) {
         console.error("Error al cargar clientes:", err);
     }
+}
+
+function ordenarClientesPor(columna) {
+    if (ordenClientesColumna === columna) {
+        ordenClientesAsc = !ordenClientesAsc;
+    } else {
+        ordenClientesColumna = columna;
+        ordenClientesAsc = true;
+    }
+    actualizarIconosOrdenClientes();
+    aplicarFiltroYOrdenClientes();
+}
+
+function limpiarOrdenClientes() {
+    ordenClientesColumna = null;
+    ordenClientesAsc = true;
+    const inputFiltro = document.getElementById("filtro-clientes");
+    if (inputFiltro) inputFiltro.value = "";
+    actualizarIconosOrdenClientes();
+    aplicarFiltroYOrdenClientes();
+}
+
+function actualizarIconosOrdenClientes() {
+    const columnas = ["dniCuit", "nombreApellido"];
+    columnas.forEach(col => {
+        const btn = document.getElementById(`th-cli-btn-${col}`);
+        const icon = document.getElementById(`th-cli-icon-${col}`);
+        if (!btn || !icon) return;
+
+        if (ordenClientesColumna === col) {
+            btn.classList.add("active");
+            icon.innerHTML = ordenClientesAsc ? "&#9650;" : "&#9660;";
+        } else {
+            btn.classList.remove("active");
+            icon.innerHTML = "&#8693;";
+        }
+    });
+}
+
+function aplicarFiltroYOrdenClientes() {
+    const txt = (document.getElementById("filtro-clientes")?.value || "").toLowerCase().trim();
+    let resultado = listaClientesGlobal.filter(c =>
+        (c.dniCuit && c.dniCuit.toLowerCase().includes(txt)) ||
+        (c.nombre && c.nombre.toLowerCase().includes(txt)) ||
+        (c.apellido && c.apellido.toLowerCase().includes(txt)) ||
+        (c.telefono && c.telefono.toLowerCase().includes(txt))
+    );
+
+    if (ordenClientesColumna) {
+        resultado = [...resultado].sort((a, b) => {
+            if (ordenClientesColumna === "dniCuit") {
+                const numA = parseInt(String(a.dniCuit || "").replace(/\D/g, ""), 10);
+                const numB = parseInt(String(b.dniCuit || "").replace(/\D/g, ""), 10);
+                if (!isNaN(numA) && !isNaN(numB) && numA !== numB) {
+                    return ordenClientesAsc ? numA - numB : numB - numA;
+                }
+                const strA = String(a.dniCuit || "").toLowerCase();
+                const strB = String(b.dniCuit || "").toLowerCase();
+                return ordenClientesAsc ? strA.localeCompare(strB) : strB.localeCompare(strA);
+            }
+
+            if (ordenClientesColumna === "nombreApellido") {
+                const nomA = `${a.nombre || ""} ${a.apellido || ""}`.trim().toLowerCase();
+                const nomB = `${b.nombre || ""} ${b.apellido || ""}`.trim().toLowerCase();
+                return ordenClientesAsc ? nomA.localeCompare(nomB, "es") : nomB.localeCompare(nomA, "es");
+            }
+
+            return 0;
+        });
+    }
+
+    renderizarTablaClientes(resultado);
 }
 
 function renderizarTablaClientes(clientes) {
@@ -1095,14 +1389,7 @@ function renderizarTablaClientes(clientes) {
 }
 
 function filtrarClientes() {
-    const txt = document.getElementById("filtro-clientes").value.toLowerCase().trim();
-    const filtrados = listaClientesGlobal.filter(c =>
-        (c.dniCuit && c.dniCuit.toLowerCase().includes(txt)) ||
-        (c.nombre && c.nombre.toLowerCase().includes(txt)) ||
-        (c.apellido && c.apellido.toLowerCase().includes(txt)) ||
-        (c.telefono && c.telefono.toLowerCase().includes(txt))
-    );
-    renderizarTablaClientes(filtrados);
+    aplicarFiltroYOrdenClientes();
 }
 
 function abrirModalCliente() {
@@ -1457,4 +1744,261 @@ function limpiarFiltroRecaudacion() {
     document.getElementById("fecha-desde").value = "";
     document.getElementById("fecha-hasta").value = "";
     consultarRecaudacion();
+}
+
+// ============================================================
+// 9. GESTIÓN DE USUARIOS (SOLO GERENTE) Y MI CONTRASEÑA
+// ============================================================
+async function cargarUsuarios() {
+    try {
+        const res = await fetch("/api/usuarios");
+        const data = await res.json();
+        if (res.ok && Array.isArray(data)) {
+            listaUsuariosGlobal = data;
+            renderizarTablaUsuarios(listaUsuariosGlobal);
+        } else {
+            mostrarAlertaUsuarios(data.error || "No se pudieron cargar los usuarios.", "error");
+        }
+    } catch (err) {
+        mostrarAlertaUsuarios("Error de conexión al cargar usuarios.", "error");
+    }
+}
+
+function filtrarUsuarios() {
+    const txt = (document.getElementById("filtro-usuarios")?.value || "").toLowerCase().trim();
+    const filtrados = listaUsuariosGlobal.filter(u =>
+        (u.nombreUsuario && u.nombreUsuario.toLowerCase().includes(txt)) ||
+        (u.nombre && u.nombre.toLowerCase().includes(txt)) ||
+        (u.apellido && u.apellido.toLowerCase().includes(txt)) ||
+        (u.perfil && u.perfil.toLowerCase().includes(txt))
+    );
+    renderizarTablaUsuarios(filtrados);
+}
+
+function renderizarTablaUsuarios(usuarios) {
+    const tbody = document.getElementById("tbody-usuarios");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    if (!usuarios || usuarios.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center">No hay usuarios registrados.</td></tr>`;
+        return;
+    }
+
+    usuarios.forEach(u => {
+        const esMismoUsuario = usuarioActual && u.id === usuarioActual.id;
+        const badgePerfil = u.perfil === "GERENTE"
+            ? `<span class="badge badge-gerente">GERENTE</span>`
+            : `<span class="badge badge-admin">ADMINISTRATIVO</span>`;
+
+        const botonEstado = esMismoUsuario
+            ? `<span class="badge" title="No puedes desactivar tu propia cuenta">Sesión actual</span>`
+            : (u.activo
+                ? `<button type="button" class="btn btn-outline-danger btn-sm" onclick="cambiarEstadoUsuario(${u.id}, false)">Baja</button>`
+                : `<button type="button" class="btn btn-success btn-sm" onclick="cambiarEstadoUsuario(${u.id}, true)">Activar</button>`);
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><code>${u.nombreUsuario}</code></td>
+            <td><strong>${u.nombre} ${u.apellido}</strong></td>
+            <td>${badgePerfil}</td>
+            <td>
+                <span class="badge ${u.activo ? 'badge-success' : 'badge-danger'}">
+                    ${u.activo ? 'Activo' : 'Inactivo'}
+                </span>
+            </td>
+            <td style="white-space: nowrap;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="editarUsuario(${u.id})">Editar</button>
+                ${botonEstado}
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function abrirModalUsuario() {
+    editandoUsuarioId = null;
+    document.getElementById("modal-usuario-titulo").textContent = "Registrar Usuario";
+    document.getElementById("modal-usuario-error").style.display = "none";
+    document.getElementById("form-usuario").reset();
+
+    const inputUser = document.getElementById("usr-username");
+    inputUser.disabled = false;
+
+    const inputPass = document.getElementById("usr-password");
+    inputPass.required = true;
+    inputPass.placeholder = "Ingrese contraseña";
+    document.getElementById("usr-password-label").textContent = "Contraseña (mínimo 4 caracteres)";
+
+    document.getElementById("modal-usuario").style.display = "flex";
+}
+
+function cerrarModalUsuario() {
+    document.getElementById("modal-usuario").style.display = "none";
+}
+
+function editarUsuario(id) {
+    const u = listaUsuariosGlobal.find(item => item.id === id);
+    if (!u) return;
+
+    editandoUsuarioId = u.id;
+    document.getElementById("modal-usuario-titulo").textContent = "Modificar Usuario";
+    document.getElementById("modal-usuario-error").style.display = "none";
+
+    const inputUser = document.getElementById("usr-username");
+    inputUser.value = u.nombreUsuario;
+    inputUser.disabled = true;
+
+    document.getElementById("usr-perfil").value = u.perfil;
+    document.getElementById("usr-nombre").value = u.nombre;
+    document.getElementById("usr-apellido").value = u.apellido;
+
+    const inputPass = document.getElementById("usr-password");
+    inputPass.value = "";
+    inputPass.required = false;
+    inputPass.placeholder = "Dejar vacío para mantener la actual";
+    document.getElementById("usr-password-label").textContent = "Nueva Contraseña (opcional)";
+
+    document.getElementById("modal-usuario").style.display = "flex";
+}
+
+async function guardarUsuario(e) {
+    e.preventDefault();
+    const errorBox = document.getElementById("modal-usuario-error");
+    errorBox.style.display = "none";
+
+    const existente = editandoUsuarioId ? listaUsuariosGlobal.find(item => item.id === editandoUsuarioId) : null;
+
+    const payload = {
+        id: editandoUsuarioId,
+        nombreUsuario: document.getElementById("usr-username").value.trim(),
+        nombre: document.getElementById("usr-nombre").value.trim(),
+        apellido: document.getElementById("usr-apellido").value.trim(),
+        perfil: document.getElementById("usr-perfil").value,
+        contrasena: document.getElementById("usr-password").value,
+        activo: existente ? existente.activo : true
+    };
+
+    try {
+        const res = await fetch("/api/usuarios", {
+            method: editandoUsuarioId ? "PUT" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok && data.exito) {
+            cerrarModalUsuario();
+            mostrarAlertaUsuarios(editandoUsuarioId ? "Usuario actualizado con éxito." : "Usuario registrado con éxito.", "success");
+            cargarUsuarios();
+        } else {
+            errorBox.textContent = data.error || "No se pudo guardar el usuario.";
+            errorBox.style.display = "block";
+        }
+    } catch (err) {
+        errorBox.textContent = "Error de conexión al guardar el usuario.";
+        errorBox.style.display = "block";
+    }
+}
+
+async function cambiarEstadoUsuario(id, activar) {
+    const u = listaUsuariosGlobal.find(item => item.id === id);
+    if (!u) return;
+
+    if (!confirm(`¿Confirma ${activar ? "reactivar" : "dar de baja"} al usuario '${u.nombreUsuario}' (${u.nombre} ${u.apellido})?`)) return;
+
+    try {
+        const res = await fetch(`/api/usuarios?id=${id}&activar=${activar}`, { method: "DELETE" });
+        const data = await res.json();
+        if (res.ok && data.exito) {
+            mostrarAlertaUsuarios(activar ? "Usuario reactivado con éxito." : "Usuario dado de baja con éxito.", "success");
+            cargarUsuarios();
+        } else {
+            mostrarAlertaUsuarios(data.error || "No se pudo actualizar el estado del usuario.", "error");
+        }
+    } catch (err) {
+        mostrarAlertaUsuarios("Error de conexión al cambiar el estado del usuario.", "error");
+    }
+}
+
+function mostrarAlertaUsuarios(mensaje, tipo) {
+    const alerta = document.getElementById("usuarios-alerta");
+    if (!alerta) return;
+    alerta.textContent = mensaje;
+    alerta.className = `alert alert-${tipo}`;
+    alerta.style.display = "block";
+}
+
+// ============================================================
+// AUTOGESTIÓN DE CONTRASEÑA PROPIA (AMBOS PERFILES)
+// ============================================================
+function abrirModalCambiarPassword() {
+    const menu = document.getElementById("user-dropdown-menu");
+    if (menu) menu.style.display = "none";
+
+    if (!usuarioActual) return;
+
+    document.getElementById("mi-cuenta-username").textContent = usuarioActual.nombreUsuario || "-";
+    document.getElementById("mi-cuenta-perfil").textContent = usuarioActual.perfil || "-";
+    document.getElementById("mi-cuenta-nombre").textContent = `${usuarioActual.nombre} ${usuarioActual.apellido}`;
+
+    const alerta = document.getElementById("modal-pass-alerta");
+    alerta.style.display = "none";
+    document.getElementById("form-cambiar-password").reset();
+    document.getElementById("modal-cambiar-password").style.display = "flex";
+}
+
+function cerrarModalCambiarPassword() {
+    document.getElementById("modal-cambiar-password").style.display = "none";
+}
+
+async function guardarCambioContrasenaPropia(e) {
+    e.preventDefault();
+    const alerta = document.getElementById("modal-pass-alerta");
+    alerta.style.display = "none";
+
+    const actual = document.getElementById("mi-pass-actual").value;
+    const nueva = document.getElementById("mi-pass-nueva").value;
+    const confirmar = document.getElementById("mi-pass-confirmar").value;
+
+    if (nueva.length < 4) {
+        alerta.textContent = "La nueva contraseña debe tener al menos 4 caracteres.";
+        alerta.className = "alert alert-error";
+        alerta.style.display = "block";
+        return;
+    }
+
+    if (nueva !== confirmar) {
+        alerta.textContent = "La confirmación no coincide con la nueva contraseña.";
+        alerta.className = "alert alert-error";
+        alerta.style.display = "block";
+        return;
+    }
+
+    try {
+        const res = await fetch("/api/usuarios/cambiar-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contrasenaActual: actual,
+                contrasenaNueva: nueva
+            })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.exito) {
+            document.getElementById("form-cambiar-password").reset();
+            alerta.textContent = "Contraseña actualizada correctamente.";
+            alerta.className = "alert alert-success";
+            alerta.style.display = "block";
+            setTimeout(() => cerrarModalCambiarPassword(), 1200);
+        } else {
+            alerta.textContent = data.error || "No se pudo actualizar la contraseña.";
+            alerta.className = "alert alert-error";
+            alerta.style.display = "block";
+        }
+    } catch (err) {
+        alerta.textContent = "Error de conexión al actualizar la contraseña.";
+        alerta.className = "alert alert-error";
+        alerta.style.display = "block";
+    }
 }
