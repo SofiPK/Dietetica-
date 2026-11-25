@@ -7,16 +7,22 @@ public class Usuario {
     private String apellido;
     private String contrasena;
     private Perfil perfil;
+    private boolean activo = true;
 
     public Usuario() {}
 
     public Usuario(int id, String nombreUsuario, String nombre, String apellido, String contrasena, Perfil perfil) {
+        this(id, nombreUsuario, nombre, apellido, contrasena, perfil, true);
+    }
+
+    public Usuario(int id, String nombreUsuario, String nombre, String apellido, String contrasena, Perfil perfil, boolean activo) {
         this.id = id;
         this.nombreUsuario = nombreUsuario;
         this.nombre = nombre;
         this.apellido = apellido;
         this.contrasena = contrasena;
-        this.perfil = perfil; // poner ambos roles
+        this.perfil = perfil;
+        this.activo = activo;
     }
 
     public int getId() { return id; }
@@ -36,6 +42,9 @@ public class Usuario {
 
     public Perfil getPerfil() { return perfil; }
     public void setPerfil(Perfil perfil) { this.perfil = perfil; }
+
+    public boolean isActivo() { return activo; }
+    public void setActivo(boolean activo) { this.activo = activo; }
 
     public boolean validarContrasena(String pass) {
         return this.contrasena != null && this.contrasena.equals(pass);

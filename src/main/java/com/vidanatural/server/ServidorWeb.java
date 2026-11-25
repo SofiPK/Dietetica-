@@ -26,6 +26,7 @@ import com.vidanatural.model.Cliente;
 import com.vidanatural.model.DetalleVenta;
 import com.vidanatural.model.MedioPago;
 import com.vidanatural.model.MovimientoCaja;
+import com.vidanatural.model.Perfil;
 import com.vidanatural.model.Producto;
 import com.vidanatural.model.Promocion;
 import com.vidanatural.model.TipoDescuento;
@@ -36,6 +37,7 @@ import com.vidanatural.service.GestorCaja;
 import com.vidanatural.service.GestorClientes;
 import com.vidanatural.service.GestorProductos;
 import com.vidanatural.service.GestorPromociones;
+import com.vidanatural.service.GestorUsuarios;
 import com.vidanatural.service.GestorVentas;
 import com.vidanatural.service.SistemaLogin;
 
@@ -53,6 +55,7 @@ public class ServidorWeb {
     private final GestorClientes gestorClientes = new GestorClientes();
     private final GestorPromociones gestorPromociones = new GestorPromociones();
     private final GestorCaja gestorCaja = new GestorCaja();
+    private final GestorUsuarios gestorUsuarios = new GestorUsuarios();
     private final SistemaLogin sistemaLogin = new SistemaLogin();
 
     public void iniciar() throws IOException {
@@ -66,7 +69,7 @@ public class ServidorWeb {
         server.createContext("/api/ventas", new VentasHandler());
         server.createContext("/api/ventas/recaudado", new RecaudadoHandler());
 
-        // 2. Endpoints nuevos: Clientes, Promociones y Caja
+        // 2. Endpoints nuevos: Clientes, Promociones, Caja y Usuarios
         server.createContext("/api/clientes", new ClientesHandler());
         server.createContext("/api/clientes/buscar", new BuscarClienteHandler());
         server.createContext("/api/promociones", new PromocionesHandler());
@@ -76,6 +79,8 @@ public class ServidorWeb {
         server.createContext("/api/caja/movimiento", new CajaMovimientoHandler());
         server.createContext("/api/caja/cerrar", new CajaCerrarHandler());
         server.createContext("/api/caja/historial", new CajaHistorialHandler());
+        server.createContext("/api/usuarios", new UsuariosHandler());
+        server.createContext("/api/usuarios/cambiar-password", new CambiarPasswordHandler());
 
         // 3. Servir archivos estáticos del frontend (HTML, CSS, JS)
         server.createContext("/", new ArchivosEstaticosHandler());
@@ -90,7 +95,7 @@ public class ServidorWeb {
     }
 
     // ============================================================
-    // HANDLERS DE AUTENTICACIÓN Y PRODUCTOS
+    // HANDLERS DE AUTENTICACIÓN Y USUARIOS
     // ============================================================
 
     private class LoginHandler implements HttpHandler {
@@ -109,18 +114,104 @@ public class ServidorWeb {
                 Usuario u = sistemaLogin.autenticar(usuario, clave);
                 if (u != null) {
                     String resp = String.format(
-                        "{\"id\":%d,\"nombreUsuario\":\"%s\",\"nombre\":\"%s\",\"apellido\":\"%s\",\"perfil\":\"%s\"}",
-                        u.getId(), u.getNombreUsuario(), u.getNombre(), u.getApellido(), u.getPerfil().name()
+                        "{\"id\":%d,\"nombreUsuario\":\"%s\",\"nombre\":\"%s\",\"apellido\":\"%s\",\"perfil\":\"%s\",\"activo\":%b}",
+                        u.getId(), escaparJson(u.getNombreUsuario()), escaparJson(u.getNombre()),
+                        escaparJson(u.getApellido()), u.getPerfil().name(), u.isActivo()
                     );
                     responderJson(exchange, 200, resp);
                 } else {
-                    responderJson(exchange, 401, "{\"error\":\"Usuario o contraseña incorrectos\"}");
+                    responderJson(exchange, 401, "{\"error\":\"Usuario o contraseña incorrectos, o cuenta desactivada\"}");
                 }
             } catch (Exception e) {
                 responderJson(exchange, 500, "{\"error\":\"Error de base de datos MySQL: " + escaparJson(e.getMessage()) + "\"}");
             }
         }
     }
+
+    private class UsuariosHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!verificarRolGerente(exchange)) return;
+
+            int idOperador = obtenerUserIdHeader(exchange);
+            String metodo = exchange.getRequestMethod().toUpperCase();
+
+            try {
+                switch (metodo) {
+                    case "GET":
+                        List<Usuario> lista = gestorUsuarios.listarTodos();
+                        StringBuilder sb = new StringBuilder("[");
+                        for (int i = 0; i < lista.size(); i++) {
+                            sb.append(usuarioAJson(lista.get(i)));
+                            if (i < lista.size() - 1) sb.append(",");
+                        }
+                        sb.append("]");
+                        responderJson(exchange, 200, sb.toString());
+                        break;
+
+                    case "POST":
+                        Usuario nuevo = jsonAUsuario(leerCuerpo(exchange));
+                        Usuario creado = gestorUsuarios.crearUsuario(nuevo);
+                        responderJson(exchange, 200, "{\"exito\":true,\"usuario\":" + usuarioAJson(creado) + "}");
+                        break;
+
+                    case "PUT":
+                        Usuario editado = jsonAUsuario(leerCuerpo(exchange));
+                        gestorUsuarios.actualizarUsuario(editado, idOperador);
+                        responderJson(exchange, 200, "{\"exito\":true}");
+                        break;
+
+                    case "DELETE":
+                        Map<String, String> qDel = parseQuery(exchange.getRequestURI().getQuery());
+                        int idObjetivo = Integer.parseInt(qDel.get("id"));
+                        boolean activar = "true".equalsIgnoreCase(qDel.get("activar"));
+                        gestorUsuarios.cambiarEstadoUsuario(idObjetivo, activar, idOperador);
+                        responderJson(exchange, 200, "{\"exito\":true}");
+                        break;
+
+                    default:
+                        responderJson(exchange, 405, "{\"error\":\"Método no permitido\"}");
+                }
+            } catch (IllegalArgumentException e) {
+                responderJson(exchange, 400, "{\"error\":\"" + escaparJson(e.getMessage()) + "\"}");
+            } catch (Exception e) {
+                responderJson(exchange, 500, "{\"error\":\"Error al procesar usuario: " + escaparJson(e.getMessage()) + "\"}");
+            }
+        }
+    }
+
+    private class CambiarPasswordHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            if (!verificarRolAdminOGerente(exchange)) return;
+            if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                responderJson(exchange, 405, "{\"error\":\"Método no permitido\"}");
+                return;
+            }
+
+            int idUsuario = obtenerUserIdHeader(exchange);
+            if (idUsuario <= 0) {
+                responderJson(exchange, 401, "{\"error\":\"Sesión inválida: vuelva a iniciar sesión\"}");
+                return;
+            }
+
+            try {
+                Map<String, String> body = parseSimpleJson(leerCuerpo(exchange));
+                String actual = body.get("contrasenaActual");
+                String nueva = body.get("contrasenaNueva");
+                gestorUsuarios.cambiarContrasenaPropia(idUsuario, actual, nueva);
+                responderJson(exchange, 200, "{\"exito\":true,\"mensaje\":\"Contraseña actualizada correctamente\"}");
+            } catch (IllegalArgumentException e) {
+                responderJson(exchange, 400, "{\"error\":\"" + escaparJson(e.getMessage()) + "\"}");
+            } catch (Exception e) {
+                responderJson(exchange, 500, "{\"error\":\"Error al actualizar contraseña: " + escaparJson(e.getMessage()) + "\"}");
+            }
+        }
+    }
+
+    // ============================================================
+    // HANDLERS DE PRODUCTOS
+    // ============================================================
 
     private class BuscarProductoHandler implements HttpHandler {
         @Override
@@ -594,6 +685,16 @@ public class ServidorWeb {
     // UTILIDADES DE SEGURIDAD, SERIALIZACIÓN Y PARSEO JSON
     // ============================================================
 
+    private int obtenerUserIdHeader(HttpExchange exchange) {
+        String idHeader = exchange.getRequestHeaders().getFirst("X-User-Id");
+        if (idHeader == null || idHeader.trim().isEmpty()) return 0;
+        try {
+            return Integer.parseInt(idHeader.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
     private boolean verificarRolAdmin(HttpExchange exchange) throws IOException {
         String perfil = exchange.getRequestHeaders().getFirst("X-User-Perfil");
         if (!"ADMINISTRATIVO".equalsIgnoreCase(perfil)) {
@@ -640,6 +741,31 @@ public class ServidorWeb {
             }
             return bos.toString(StandardCharsets.UTF_8);
         }
+    }
+
+    private String usuarioAJson(Usuario u) {
+        return String.format(Locale.US,
+            "{\"id\":%d,\"nombreUsuario\":\"%s\",\"nombre\":\"%s\",\"apellido\":\"%s\",\"perfil\":\"%s\",\"activo\":%b}",
+            u.getId(), escaparJson(u.getNombreUsuario()), escaparJson(u.getNombre()),
+            escaparJson(u.getApellido()), u.getPerfil().name(), u.isActivo()
+        );
+    }
+
+    private Usuario jsonAUsuario(String json) {
+        Map<String, String> m = parseSimpleJson(json);
+        Usuario u = new Usuario();
+        if (m.containsKey("id") && !m.get("id").isEmpty() && !"null".equalsIgnoreCase(m.get("id"))) {
+            u.setId(Integer.parseInt(m.get("id")));
+        }
+        u.setNombreUsuario(m.get("nombreUsuario"));
+        u.setNombre(m.get("nombre"));
+        u.setApellido(m.get("apellido"));
+        u.setContrasena(m.get("contrasena"));
+        if (m.containsKey("perfil") && !m.get("perfil").isEmpty()) {
+            u.setPerfil(Perfil.valueOf(m.get("perfil").toUpperCase()));
+        }
+        u.setActivo(!"false".equalsIgnoreCase(m.get("activo")));
+        return u;
     }
 
     private String productoAJson(Producto p) {

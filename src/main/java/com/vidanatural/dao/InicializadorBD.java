@@ -41,10 +41,14 @@ public class InicializadorBD {
                     "  apellido VARCHAR(100) NOT NULL," +
                     "  contrasena VARCHAR(255) NOT NULL," +
                     "  perfil ENUM('ADMINISTRATIVO', 'GERENTE') NOT NULL," +
+                    "  activo TINYINT(1) NOT NULL DEFAULT 1," +
                     "  PRIMARY KEY (id)," +
                     "  UNIQUE KEY uq_nombre_usuario (nombre_usuario)" +
                     ") ENGINE=InnoDB;"
                 );
+
+                // Migración segura si la tabla 'usuario' ya existía sin la columna 'activo'
+                agregarColumnaSiNoExiste(conn, "usuario", "activo", "TINYINT(1) NOT NULL DEFAULT 1");
 
                 // 2. Tabla producto
                 stmt.executeUpdate(
@@ -194,9 +198,9 @@ public class InicializadorBD {
                 try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM usuario;")) {
                     if (rs.next() && rs.getInt(1) == 0) {
                         stmt.executeUpdate(
-                            "INSERT INTO usuario (nombre_usuario, nombre, apellido, contrasena, perfil) VALUES " +
-                            "('admin01', 'Juan', 'García', 'admin123', 'ADMINISTRATIVO')," +
-                            "('gerente', 'Laura', 'Fernández', 'gerente123', 'GERENTE');"
+                            "INSERT INTO usuario (nombre_usuario, nombre, apellido, contrasena, perfil, activo) VALUES " +
+                            "('admin01', 'Juan', 'García', 'admin123', 'ADMINISTRATIVO', 1)," +
+                            "('gerente', 'Laura', 'Fernández', 'gerente123', 'GERENTE', 1);"
                         );
                         System.out.println("Usuarios de prueba creados.");
                     }
