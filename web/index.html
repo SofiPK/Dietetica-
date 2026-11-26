@@ -140,7 +140,7 @@
                     <form id="form-recup-correo" onsubmit="enviarCodigoRecuperacion(event)">
                         <div class="form-group">
                             <label for="recup-email">Correo Electrónico</label>
-                            <input type="email" id="recup-email" placeholder="ejemplo@vidanatural.com" required>
+                            <input type="email" id="recup-email" placeholder="ejemplo@gmail.com" required>
                         </div>
                         <button type="submit" class="btn btn-primary btn-block">Enviar Código</button>
                     </form>
@@ -222,9 +222,6 @@
             </div>
 
             <div class="header-right">
-                <span id="header-caja-estado" class="badge badge-warning" style="margin-right: 0.75rem; cursor: pointer;" onclick="cambiarSeccion('caja')">
-                    Caja: Verificando...
-                </span>
                 <div class="user-dropdown-wrapper">
                     <button class="user-dropdown-btn" onclick="toggleUserMenu()">
                         <span id="header-user-name" class="user-name">Usuario</span>
@@ -521,9 +518,8 @@
 
                 <!-- SECCIÓN 3: HISTORIAL DE VENTAS -->
                 <section id="seccion-historial-ventas" class="seccion-view" style="display:none;">
-                    <header class="section-heading flex-between">
+                    <header class="section-heading">
                         <h2>Historial de Ventas</h2>
-                        <span class="badge badge-admin" id="historial-ventas-contador">0 ventas</span>
                     </header>
 
                     <div class="card">

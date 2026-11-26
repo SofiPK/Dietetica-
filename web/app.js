@@ -273,17 +273,6 @@ async function verificarEstadoCajaGlobal() {
         const data = await res.json();
         cajaActualGlobal = data.abierta ? data.caja : null;
 
-        const headerBadge = document.getElementById("header-caja-estado");
-        if (headerBadge) {
-            if (data.abierta) {
-                headerBadge.textContent = `Caja #${data.caja.id}: $${data.caja.saldoActual.toFixed(2)}`;
-                headerBadge.className = "badge badge-success";
-            } else {
-                headerBadge.textContent = "Caja Cerrada";
-                headerBadge.className = "badge badge-danger";
-            }
-        }
-
         const avisoVenta = document.getElementById("venta-caja-aviso");
         const bannerCerrada = document.getElementById("venta-caja-cerrada-banner");
         if (avisoVenta && bannerCerrada) {
@@ -932,7 +921,6 @@ function aplicarFiltroYOrdenVentas() {
 function renderizarHistorialVentas(ventas) {
     const tbody = document.getElementById("tbody-historial-erp");
     tbody.innerHTML = "";
-    document.getElementById("historial-ventas-contador").textContent = `${ventas.length} ventas`;
 
     if (!ventas || ventas.length === 0) {
         tbody.innerHTML = `<tr><td colspan="8" class="text-center">No se encontraron ventas registradas.</td></tr>`;
