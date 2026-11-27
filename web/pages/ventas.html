@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vida Natural — Registrar Venta</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-layout">
+        <header id="app-header"></header>
+
+        <div class="app-body">
+            <aside id="app-sidebar"></aside>
+
+            <main class="main-content">
+                <section id="seccion-ventas">
+                    <header class="section-heading">
+                        <h2>Registrar Venta</h2>
+                    </header>
+
+                    <div id="venta-caja-cerrada-banner" class="alert alert-error" style="display:none;">
+                        <strong>Caja cerrada:</strong> Debe realizar la apertura de caja antes de registrar ventas en el mostrador.
+                        <a href="caja.html" class="btn btn-primary btn-sm" style="margin-left: 0.8rem;">Ir a Caja</a>
+                    </div>
+
+                    <div class="grid-venta">
+                        <div class="card">
+                            <h3 class="card-title">Incorporar Producto a la Venta</h3>
+                            <div id="venta-alerta" class="alert" style="display:none;"></div>
+
+                            <div class="form-row">
+                                <div class="form-group flex-2">
+                                    <label for="venta-codigo">Código o Nombre del Producto</label>
+                                    <input type="text" id="venta-codigo" list="datalist-productos-venta" autocomplete="off" placeholder="Ej: AV001 o Avena..." oninput="seleccionarDesdeDatalistVenta()" onkeydown="if(event.key==='Enter'){ event.preventDefault(); buscarProductoParaVenta(); }">
+                                    <datalist id="datalist-productos-venta"></datalist>
+                                </div>
+                                <div class="form-group align-end">
+                                    <button type="button" class="btn btn-secondary" onclick="buscarProductoParaVenta()">Verificar Stock</button>
+                                </div>
+                            </div>
+
+                            <div id="venta-info-prod" class="info-box" style="display:none;">
+                                <div class="flex-between" style="margin-bottom: 0.4rem;">
+                                    <h4 id="vip-desc" style="margin:0;">-</h4>
+                                    <span id="vip-promo-badge" class="badge badge-warning" style="display:none;">Promoción</span>
+                                </div>
+                                <div class="info-grid">
+                                    <div><strong>Categoría:</strong> <span id="vip-cat">-</span></div>
+                                    <div><strong>Precio lista:</strong> $<span id="vip-precio">0.00</span></div>
+                                    <div><strong>Stock disponible:</strong> <span id="vip-stock" class="badge">0</span></div>
+                                    <div><strong>Precio final:</strong> $<span id="vip-precio-final">0.00</span></div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="venta-cantidad">Cantidad Solicitada</label>
+                                    <input type="number" id="venta-cantidad" min="1" step="1" value="1" onkeydown="if(event.key==='Enter'){ event.preventDefault(); agregarItemVenta(); }">
+                                </div>
+                                <div class="form-group align-end">
+                                    <button type="button" class="btn btn-primary" onclick="agregarItemVenta()">Incorporar a la Venta</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="card-title">Detalle de la Venta en Curso</h3>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="venta-cliente">Cliente (Opcional)</label>
+                                    <select id="venta-cliente">
+                                        <option value="">Consumidor Final (Sin asignar)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="venta-medio-pago">Medio de Pago</label>
+                                    <select id="venta-medio-pago">
+                                        <option value="EFECTIVO">Efectivo (Impacta en Caja)</option>
+                                        <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                                        <option value="DEBITO_CREDITO">Tarjeta Débito / Crédito</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table" id="tabla-carrito">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Descripción</th>
+                                            <th>Precio</th>
+                                            <th>Cant.</th>
+                                            <th>Dto.</th>
+                                            <th>Subtotal</th>
+                                            <th>Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-carrito">
+                                        <tr class="empty-row"><td colspan="7">No hay productos agregados a la venta.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div id="venta-resumen-descuento" class="flex-between" style="display:none; padding-top: 0.8rem; color: var(--warning); font-weight: 600; font-size: 0.9rem;">
+                                <span>Ahorro por Promociones Vigentes:</span>
+                                <span id="venta-descuento-total">-$0.00</span>
+                            </div>
+
+                            <div class="total-bar">
+                                <span class="total-label">Importe Total a Cobrar:</span>
+                                <span class="total-monto" id="venta-total">$0.00</span>
+                            </div>
+
+                            <button type="button" class="btn btn-success btn-block btn-lg" onclick="confirmarVentaFinal()">
+                                Confirmar Venta y Descontar Stock
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+    <!-- MODAL: COMPROBANTE / REMITO DE VENTA IMPRIMIBLE -->
+    <div id="modal-remito" class="modal-backdrop" style="display:none;">
+        <div class="modal-card remito-printable" style="max-width: 680px;">
+            <header class="modal-header no-print">
+                <h3>Comprobante de Venta / Remito</h3>
+                <button class="btn-close" onclick="cerrarModalRemito()">&times;</button>
+            </header>
+
+            <div id="remito-contenido" class="remito-body">
+                <div class="flex-between" style="border-bottom: 2px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <h2 style="margin: 0; color: #15803d;">Vida Natural</h2>
+                        <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: #64748b;">Dietética Comercial — Comprobante Interno de Venta</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.1rem; font-weight: 700;">REMITO <span id="remito-numero">#0000</span></div>
+                        <div style="font-size: 0.85rem; color: #64748b;" id="remito-fecha">-</div>
+                    </div>
+                </div>
+
+                <div class="info-grid" style="margin-bottom: 1rem; font-size: 0.9rem;">
+                    <div><strong>Cliente:</strong> <span id="remito-cliente">Consumidor Final</span></div>
+                    <div><strong>Medio de Pago:</strong> <span id="remito-medio-pago">-</span></div>
+                    <div><strong>Estado:</strong> <span id="remito-estado">-</span></div>
+                    <div><strong>Operador:</strong> <span id="remito-operador">-</span></div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th>Cant.</th>
+                                <th>Precio Unit.</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="remito-tbody-items"></tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 1rem; border-top: 1px solid #e2e8f0; padding-top: 0.8rem; text-align: right;">
+                    <div id="remito-fila-descuento" style="display:none; font-size: 0.9rem; color: #b45309; margin-bottom: 0.3rem;">
+                        Descuento aplicado: <strong id="remito-descuento">-$0.00</strong>
+                    </div>
+                    <div style="font-size: 1.2rem; font-weight: 700;">
+                        Total Cobrado: <span id="remito-total">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer no-print">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModalRemito()">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="imprimirRemito()">Imprimir Remito</button>
+            </div>
+        </div>
+    </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/ventas.js"></script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vida Natural — Reporte de Recaudación</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-layout">
+        <header id="app-header"></header>
+
+        <div class="app-body">
+            <aside id="app-sidebar"></aside>
+
+            <main class="main-content">
+                <section id="seccion-recaudacion">
+                    <header class="section-heading">
+                        <h2>Reporte de Recaudación</h2>
+                    </header>
+
+                    <div class="card">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="fecha-desde">Fecha Desde</label>
+                                <input type="date" id="fecha-desde">
+                            </div>
+                            <div class="form-group">
+                                <label for="fecha-hasta">Fecha Hasta</label>
+                                <input type="date" id="fecha-hasta">
+                            </div>
+                            <div class="form-group align-end">
+                                <button type="button" class="btn btn-primary" onclick="consultarRecaudacion()">Consultar Recaudación</button>
+                            </div>
+                            <div class="form-group align-end">
+                                <button type="button" class="btn btn-secondary" onclick="limpiarFiltroRecaudacion()">Ver Todo el Histórico</button>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card">
+                            <span class="kpi-title">TOTAL RECAUDADO EN EL PERÍODO</span>
+                            <span class="kpi-value" id="kpi-monto-recaudado">$ 0,00</span>
+                        </div>
+
+                        <div class="kpi-grid-3" style="margin-top: 1.5rem;">
+                            <div class="stat-card">
+                                <span class="stat-label">VENTAS CONFIRMADAS</span>
+                                <span class="stat-value" id="kpi-cant-ventas">0</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">TICKET PROMEDIO</span>
+                                <span class="stat-value" id="kpi-ticket-promedio">$ 0,00</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">DESCUENTOS POR PROMOCIONES</span>
+                                <span class="stat-value" style="color: var(--warning);" id="kpi-total-descuentos">$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid-venta">
+                        <div class="card">
+                            <h3 class="card-title">Distribución de Ventas por Categoría</h3>
+                            <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                                Participación de cada rubro en la facturación para orientar compras e inversión de stock.
+                            </p>
+                            <div id="chart-categorias" class="bar-chart-list">
+                                <div class="text-center" style="color: var(--text-secondary); padding: 1.5rem;">Sin datos en el período.</div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="card-title">Evolución Diaria de Ventas</h3>
+                            <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                                Comportamiento de la recaudación por día dentro del rango seleccionado.
+                            </p>
+                            <div id="chart-evolucion" class="column-chart-wrapper">
+                                <div class="text-center" style="color: var(--text-secondary); padding: 1.5rem;">Sin datos en el período.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid-venta">
+                        <div class="card">
+                            <h3 class="card-title">Recaudación por Medio de Pago</h3>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Medio de Pago</th>
+                                            <th>Operaciones</th>
+                                            <th>Total Recaudado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-reporte-medios">
+                                        <tr><td colspan="3">Sin datos en el período.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="card-title">Productos Más Vendidos (Top 5)</h3>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Unidades</th>
+                                            <th>Recaudado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-reporte-top">
+                                        <tr><td colspan="3">Sin datos en el período.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="flex-between" style="margin-bottom: 0.5rem;">
+                            <h3 class="card-title" style="margin-bottom: 0;">Productos Activos sin Rotación en el Período</h3>
+                            <span id="badge-sin-rotacion" class="badge badge-warning">0 productos</span>
+                        </div>
+                        <p style="font-size: 0.84rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                            Artículos habilitados que registraron 0 ventas en el período consultado. Útil para evaluar promociones o evitar sobrestock.
+                        </p>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th>Categoría</th>
+                                        <th>Stock Inmovilizado</th>
+                                        <th>Precio Unitario</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-sin-rotacion">
+                                    <tr><td colspan="5">Consultando rotación de productos...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/recaudacion.js"></script>
+</body>
+</html>

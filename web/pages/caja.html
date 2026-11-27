@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vida Natural — Caja</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-layout">
+        <header id="app-header"></header>
+
+        <div class="app-body">
+            <aside id="app-sidebar"></aside>
+
+            <main class="main-content">
+                <section id="seccion-caja">
+                    <header class="section-heading">
+                        <h2>Caja</h2>
+                    </header>
+
+                    <div id="caja-alerta" class="alert" style="display:none;"></div>
+
+                    <!-- AVISO PARA GERENTE CUANDO ESTÁ CERRADA -->
+                    <div id="caja-cerrada-gerente-aviso" class="card" style="display:none;">
+                        <h3 class="card-title">Estado del Turno</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.92rem;">
+                            Actualmente no hay ninguna caja abierta en el mostrador. La apertura de caja es realizada por el personal Administrativo al iniciar el turno.
+                        </p>
+                    </div>
+
+                    <!-- VISTA CUANDO LA CAJA ESTÁ CERRADA (ADMINISTRATIVO) -->
+                    <div id="panel-caja-cerrada" class="card" style="display:none;">
+                        <h3 class="card-title">Apertura de Caja del Turno</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.2rem;">
+                            Actualmente no hay ninguna caja abierta. Ingrese el fondo inicial en efectivo para habilitar la operatoria de ventas.
+                        </p>
+                        <form id="form-abrir-caja" onsubmit="abrirCajaTurno(event)">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="caja-monto-inicial">Monto Inicial en Efectivo ($)</label>
+                                    <input type="number" id="caja-monto-inicial" step="0.01" min="0" required placeholder="0.00">
+                                </div>
+                                <div class="form-group flex-2">
+                                    <label for="caja-obs-apertura">Observaciones de Apertura</label>
+                                    <input type="text" id="caja-obs-apertura" placeholder="Ej: Cambio inicial turno mañana">
+                                </div>
+                                <div class="form-group align-end">
+                                    <button type="submit" class="btn btn-primary">Abrir Caja</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- VISTA CUANDO LA CAJA ESTÁ ABIERTA -->
+                    <div id="panel-caja-abierta" style="display:none;">
+                        <div class="kpi-grid-3">
+                            <div class="stat-card">
+                                <span class="stat-label">FONDO INICIAL</span>
+                                <span class="stat-value" id="caja-stat-inicial">$0.00</span>
+                            </div>
+                            <div class="stat-card stat-card-primary">
+                                <span class="stat-label">SALDO ACTUAL EN CAJA (EFECTIVO)</span>
+                                <span class="stat-value" id="caja-stat-actual">$0.00</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-label">APERTURA DE TURNO</span>
+                                <span class="stat-value" style="font-size: 1.05rem;" id="caja-stat-fecha">-</span>
+                            </div>
+                        </div>
+
+                        <div class="grid-venta" id="caja-operaciones-admin">
+                            <div class="card">
+                                <h3 class="card-title">Registrar Movimiento Manual</h3>
+                                <form id="form-movimiento-caja" onsubmit="registrarMovimientoCaja(event)">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="mov-tipo">Tipo de Movimiento</label>
+                                            <select id="mov-tipo" required>
+                                                <option value="INGRESO_MANUAL">Ingreso de Efectivo (+)</option>
+                                                <option value="EGRESO_MANUAL">Retiro / Gasto (-)</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="mov-monto">Monto ($)</label>
+                                            <input type="number" id="mov-monto" step="0.01" min="0.01" required placeholder="0.00">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="mov-concepto">Concepto / Motivo</label>
+                                        <input type="text" id="mov-concepto" required placeholder="Ej: Pago flete proveedor / Refuerzo cambio">
+                                    </div>
+                                    <button type="submit" class="btn btn-secondary btn-block">Registrar Movimiento</button>
+                                </form>
+                            </div>
+
+                            <div class="card">
+                                <h3 class="card-title">Cierre y Arqueo de Caja</h3>
+                                <form id="form-cerrar-caja" onsubmit="cerrarCajaTurno(event)">
+                                    <div class="form-group">
+                                        <label for="caja-monto-real">Efectivo Real Contado en Caja ($)</label>
+                                        <input type="number" id="caja-monto-real" step="0.01" min="0" required placeholder="0.00" oninput="actualizarVistaDiferenciaCierre()">
+                                    </div>
+                                    <div id="caja-preview-diferencia" class="info-box" style="padding: 0.7rem 1rem; margin-bottom: 1rem;">
+                                        <strong>Diferencia estimada:</strong> <span id="caja-diff-valor">$0.00</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="caja-obs-cierre">Observaciones de Cierre</label>
+                                        <input type="text" id="caja-obs-cierre" placeholder="Opcional: detalle de sobrante o faltante">
+                                    </div>
+                                    <button type="submit" class="btn btn-outline-danger btn-block">Cerrar Caja y Guardar Arqueo</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3 class="card-title">Movimientos de la Caja Actual</h3>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Hora</th>
+                                            <th>Tipo</th>
+                                            <th>Concepto</th>
+                                            <th>Monto</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-movimientos-caja">
+                                        <tr><td colspan="4">Sin movimientos registrados.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- HISTORIAL DE CIERRES DE CAJA -->
+                    <div class="card">
+                        <h3 class="card-title">Historial de Cierres de Caja</h3>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Caja #</th>
+                                        <th>Apertura</th>
+                                        <th>Cierre</th>
+                                        <th>Inicial</th>
+                                        <th>Esperado</th>
+                                        <th>Real Contado</th>
+                                        <th>Diferencia</th>
+                                        <th>Observaciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-historial-cajas">
+                                    <tr><td colspan="8">Cargando historial de cajas...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/caja.js"></script>
+</body>
+</html>

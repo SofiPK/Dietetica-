@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vida Natural — Historial de Ventas</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-layout">
+        <header id="app-header"></header>
+
+        <div class="app-body">
+            <aside id="app-sidebar"></aside>
+
+            <main class="main-content">
+                <section id="seccion-historial-ventas">
+                    <header class="section-heading">
+                        <h2>Historial de Ventas</h2>
+                    </header>
+
+                    <div class="card">
+                        <div class="form-row">
+                            <div class="form-group flex-2">
+                                <label for="historial-buscar-texto">Buscar por Producto o Código</label>
+                                <input type="text" id="historial-buscar-texto" placeholder="Ej: AV001 o Avena..." oninput="filtrarHistorialVentas()">
+                            </div>
+                            <div class="form-group">
+                                <label for="historial-desde">Desde</label>
+                                <input type="date" id="historial-desde" onchange="filtrarHistorialVentas()">
+                            </div>
+                            <div class="form-group">
+                                <label for="historial-hasta">Hasta</label>
+                                <input type="date" id="historial-hasta" onchange="filtrarHistorialVentas()">
+                            </div>
+                            <div class="form-group align-end">
+                                <button type="button" class="btn btn-secondary" onclick="limpiarFiltrosHistorial()">Limpiar</button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-venta-btn-id" onclick="ordenarVentasPor('id')">
+                                                Venta # <span class="th-filter-icon" id="th-venta-icon-id">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-venta-btn-fecha" onclick="ordenarVentasPor('fecha')">
+                                                Fecha y Hora <span class="th-filter-icon" id="th-venta-icon-fecha">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-venta-btn-articulos" onclick="ordenarVentasPor('articulos')">
+                                                Artículos Vendidos <span class="th-filter-icon" id="th-venta-icon-articulos">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-venta-btn-medioPago" onclick="ordenarVentasPor('medioPago')">
+                                                Medio de Pago <span class="th-filter-icon" id="th-venta-icon-medioPago">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-venta-btn-descuentoTotal" onclick="ordenarVentasPor('descuentoTotal')">
+                                                Descuento <span class="th-filter-icon" id="th-venta-icon-descuentoTotal">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-venta-btn-importeTotal" onclick="ordenarVentasPor('importeTotal')">
+                                                Total <span class="th-filter-icon" id="th-venta-icon-importeTotal">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-venta-btn-estado" onclick="ordenarVentasPor('estado')">
+                                                Estado <span class="th-filter-icon" id="th-venta-icon-estado">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" onclick="limpiarFiltrosHistorial()" title="Restablecer filtros y orden">
+                                                Comprobante
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-historial-erp">
+                                    <tr><td colspan="8">Cargando ventas...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+    <!-- MODAL: COMPROBANTE / REMITO DE VENTA IMPRIMIBLE -->
+    <div id="modal-remito" class="modal-backdrop" style="display:none;">
+        <div class="modal-card remito-printable" style="max-width: 680px;">
+            <header class="modal-header no-print">
+                <h3>Comprobante de Venta / Remito</h3>
+                <button class="btn-close" onclick="cerrarModalRemito()">&times;</button>
+            </header>
+
+            <div id="remito-contenido" class="remito-body">
+                <div class="flex-between" style="border-bottom: 2px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <h2 style="margin: 0; color: #15803d;">Vida Natural</h2>
+                        <p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: #64748b;">Dietética Comercial — Comprobante Interno de Venta</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.1rem; font-weight: 700;">REMITO <span id="remito-numero">#0000</span></div>
+                        <div style="font-size: 0.85rem; color: #64748b;" id="remito-fecha">-</div>
+                    </div>
+                </div>
+
+                <div class="info-grid" style="margin-bottom: 1rem; font-size: 0.9rem;">
+                    <div><strong>Cliente:</strong> <span id="remito-cliente">Consumidor Final</span></div>
+                    <div><strong>Medio de Pago:</strong> <span id="remito-medio-pago">-</span></div>
+                    <div><strong>Estado:</strong> <span id="remito-estado">-</span></div>
+                    <div><strong>Operador:</strong> <span id="remito-operador">-</span></div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th>Cant.</th>
+                                <th>Precio Unit.</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="remito-tbody-items"></tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 1rem; border-top: 1px solid #e2e8f0; padding-top: 0.8rem; text-align: right;">
+                    <div id="remito-fila-descuento" style="display:none; font-size: 0.9rem; color: #b45309; margin-bottom: 0.3rem;">
+                        Descuento aplicado: <strong id="remito-descuento">-$0.00</strong>
+                    </div>
+                    <div style="font-size: 1.2rem; font-weight: 700;">
+                        Total Cobrado: <span id="remito-total">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer no-print">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModalRemito()">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="imprimirRemito()">Imprimir Remito</button>
+            </div>
+        </div>
+    </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/historial-ventas.js"></script>
+</body>
+</html>

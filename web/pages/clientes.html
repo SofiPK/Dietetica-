@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vida Natural — Clientes</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-layout">
+        <header id="app-header"></header>
+
+        <div class="app-body">
+            <aside id="app-sidebar"></aside>
+
+            <main class="main-content">
+                <section id="seccion-clientes">
+                    <header class="section-heading flex-between">
+                        <h2>Clientes</h2>
+                        <button id="btn-nuevo-cliente" class="btn btn-primary" onclick="abrirModalCliente()">+ Registrar Cliente</button>
+                    </header>
+
+                    <div class="card">
+                        <div class="search-bar">
+                            <input type="text" id="filtro-clientes" placeholder="Buscar cliente por DNI/CUIT, nombre, apellido o teléfono" oninput="filtrarClientes()">
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-cli-btn-dniCuit" onclick="ordenarClientesPor('dniCuit')">
+                                                DNI / CUIT <span class="th-filter-icon" id="th-cli-icon-dniCuit">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" id="th-cli-btn-nombreApellido" onclick="ordenarClientesPor('nombreApellido')">
+                                                Nombre y Apellido <span class="th-filter-icon" id="th-cli-icon-nombreApellido">&#8693;</span>
+                                            </button>
+                                        </th>
+                                        <th>Teléfono</th>
+                                        <th>Correo Electrónico</th>
+                                        <th>Difusión Promos</th>
+                                        <th>Estado</th>
+                                        <th>
+                                            <button type="button" class="th-filter-btn" onclick="limpiarOrdenClientes()" title="Restablecer filtros y orden">
+                                                Acciones
+                                            </button>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-clientes">
+                                    <tr><td colspan="7">Cargando clientes...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MODAL: REGISTRAR / MODIFICAR CLIENTE -->
+                <div id="modal-cliente" class="modal-backdrop" style="display:none;">
+                    <div class="modal-card">
+                        <header class="modal-header">
+                            <h3 id="modal-cliente-titulo">Registrar Cliente</h3>
+                            <button class="btn-close" onclick="cerrarModalCliente()">&times;</button>
+                        </header>
+                        <form id="form-cliente" onsubmit="guardarCliente(event)">
+                            <div class="form-group">
+                                <label for="cli-dni">DNI / CUIT</label>
+                                <input type="text" id="cli-dni" required placeholder="Ej: 32456789">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="cli-nombre">Nombre</label>
+                                    <input type="text" id="cli-nombre" required placeholder="Ej: Lucía">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cli-apellido">Apellido</label>
+                                    <input type="text" id="cli-apellido" required placeholder="Ej: Fernández">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="cli-telefono">Teléfono</label>
+                                    <input type="text" id="cli-telefono" placeholder="Ej: 291-4567890">
+                                </div>
+                                <div class="form-group">
+                                    <label for="cli-email">Correo Electrónico</label>
+                                    <input type="email" id="cli-email" placeholder="cliente@correo.com">
+                                </div>
+                            </div>
+                            <div class="form-group" style="flex-direction: row; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" id="cli-acepta-promos" checked style="width: auto;">
+                                <label for="cli-acepta-promos" style="margin: 0;">Acepta recibir novedades y promociones</label>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" onclick="cerrarModalCliente()">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar Cliente</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/clientes.js"></script>
+</body>
+</html>

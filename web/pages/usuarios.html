@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vida Natural — Gestión de Usuarios</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-layout">
+        <header id="app-header"></header>
+
+        <div class="app-body">
+            <aside id="app-sidebar"></aside>
+
+            <main class="main-content">
+                <section id="seccion-usuarios">
+                    <header class="section-heading flex-between">
+                        <h2>Gestión de Usuarios y Perfiles</h2>
+                        <button type="button" class="btn btn-primary" onclick="abrirModalUsuario()">+ Registrar Usuario</button>
+                    </header>
+
+                    <div id="usuarios-alerta" class="alert" style="display:none;"></div>
+
+                    <div class="card">
+                        <div class="search-bar">
+                            <input type="text" id="filtro-usuarios" placeholder="Buscar por nombre de usuario, nombre, apellido o perfil" oninput="filtrarUsuarios()">
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Nombre y Apellido</th>
+                                        <th>Perfil</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-usuarios">
+                                    <tr><td colspan="5">Cargando usuarios...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MODAL: REGISTRAR / MODIFICAR USUARIO (SOLO GERENTE) -->
+                <div id="modal-usuario" class="modal-backdrop" style="display:none;">
+                    <div class="modal-card">
+                        <header class="modal-header">
+                            <h3 id="modal-usuario-titulo">Registrar Usuario</h3>
+                            <button class="btn-close" onclick="cerrarModalUsuario()">&times;</button>
+                        </header>
+                        <div id="modal-usuario-error" class="alert alert-error" style="display:none;"></div>
+                        <form id="form-usuario" onsubmit="guardarUsuario(event)">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="usr-username">Nombre de Usuario</label>
+                                    <input type="text" id="usr-username" required placeholder="Ej: admin02">
+                                </div>
+                                <div class="form-group">
+                                    <label for="usr-perfil">Perfil de Acceso</label>
+                                    <select id="usr-perfil" required>
+                                        <option value="ADMINISTRATIVO">Administrativo</option>
+                                        <option value="GERENTE">Gerente</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="usr-nombre">Nombre</label>
+                                    <input type="text" id="usr-nombre" required placeholder="Ej: Sofía">
+                                </div>
+                                <div class="form-group">
+                                    <label for="usr-apellido">Apellido</label>
+                                    <input type="text" id="usr-apellido" required placeholder="Ej: Gómez">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="usr-password" id="usr-password-label">Contraseña (mínimo 4 caracteres)</label>
+                                <input type="password" id="usr-password" minlength="4" placeholder="Ingrese contraseña">
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" onclick="cerrarModalUsuario()">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar Usuario</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/usuarios.js"></script>
+</body>
+</html>

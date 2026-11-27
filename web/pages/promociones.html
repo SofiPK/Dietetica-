@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vida Natural — Promociones y Descuentos</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-layout">
+        <header id="app-header"></header>
+
+        <div class="app-body">
+            <aside id="app-sidebar"></aside>
+
+            <main class="main-content">
+                <section id="seccion-promociones">
+                    <header class="section-heading flex-between">
+                        <h2>Promociones y Descuentos</h2>
+                        <button id="btn-nueva-promo" class="btn btn-primary" onclick="abrirModalPromocion()">+ Nueva Promoción</button>
+                    </header>
+
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Descuento</th>
+                                        <th>Vigencia</th>
+                                        <th>Productos Incluidos</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-promociones">
+                                    <tr><td colspan="6">Cargando promociones...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MODAL: REGISTRAR / MODIFICAR PROMOCIÓN -->
+                <div id="modal-promocion" class="modal-backdrop" style="display:none;">
+                    <div class="modal-card">
+                        <header class="modal-header">
+                            <h3 id="modal-promo-titulo">Nueva Promoción</h3>
+                            <button class="btn-close" onclick="cerrarModalPromocion()">&times;</button>
+                        </header>
+                        <form id="form-promocion" onsubmit="guardarPromocion(event)">
+                            <div class="form-group">
+                                <label for="promo-nombre">Nombre de la Promoción</label>
+                                <input type="text" id="promo-nombre" required placeholder="Ej: Semana de Cereales 15% OFF">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="promo-tipo">Tipo de Descuento</label>
+                                    <select id="promo-tipo" required>
+                                        <option value="PORCENTAJE">Porcentaje (%)</option>
+                                        <option value="MONTO_FIJO">Monto Fijo ($)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="promo-valor">Valor del Descuento</label>
+                                    <input type="number" id="promo-valor" step="0.01" min="0.01" required placeholder="Ej: 15">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="promo-desde">Vigencia Desde</label>
+                                    <input type="date" id="promo-desde" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="promo-hasta">Vigencia Hasta</label>
+                                    <input type="date" id="promo-hasta" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Productos Incluidos (seleccione uno o más)</label>
+                                <div id="promo-lista-productos" class="checklist-box"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" onclick="cerrarModalPromocion()">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar Promoción</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/layout.js"></script>
+    <script src="../js/promociones.js"></script>
+</body>
+</html>

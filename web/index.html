@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vida Natural — Acceso al Sistema</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div id="vista-login" class="login-wrapper">
+        <header class="login-top-header">
+            <span class="login-top-header-title">Vida Natural</span>
+        </header>
+
+        <div class="login-center-container">
+            <div class="login-card">
+
+                <!-- PASO 0: INICIO DE SESIÓN -->
+                <div id="login-paso-ingreso">
+                    <div class="brand">
+                        <h1>Bienvenido</h1>
+                    </div>
+
+                    <div id="login-error" class="alert alert-error" style="display:none;"></div>
+                    <div id="login-exito" class="alert alert-success" style="display:none;"></div>
+
+                    <form id="form-login" onsubmit="iniciarSesion(event)">
+                        <div class="form-group">
+                            <label for="usuario">Usuario</label>
+                            <input type="text" id="usuario" placeholder="Ingrese su usuario" required autofocus>
+                        </div>
+                        <div class="form-group">
+                            <label for="contrasena">Contraseña</label>
+                            <input type="password" id="contrasena" placeholder="Ingrese su contraseña" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Ingresar</button>
+                    </form>
+
+                    <div style="text-align: center; margin-top: 1.2rem;">
+                        <button type="button" class="btn-link" onclick="mostrarPasoRecuperacion('correo')">
+                            ¿Olvidaste tu contraseña?
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PASO 1: INGRESAR CORREO ELECTRÓNICO -->
+                <div id="login-paso-correo" style="display:none;">
+                    <div class="brand">
+                        <h1>Recuperar Contraseña</h1>
+                        <p>Ingrese el correo electrónico asociado a su cuenta para recibir un código de verificación.</p>
+                    </div>
+
+                    <div id="recup-correo-error" class="alert alert-error" style="display:none;"></div>
+
+                    <form id="form-recup-correo" onsubmit="enviarCodigoRecuperacion(event)">
+                        <div class="form-group">
+                            <label for="recup-email">Correo Electrónico</label>
+                            <input type="email" id="recup-email" placeholder="ejemplo@gmail.com" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Enviar Código</button>
+                    </form>
+
+                    <div style="text-align: center; margin-top: 1.2rem;">
+                        <button type="button" class="btn-link" onclick="mostrarPasoRecuperacion('ingreso')">
+                            Volver al inicio de sesión
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PASO 2: VERIFICAR CÓDIGO RECIBIDO -->
+                <div id="login-paso-codigo" style="display:none;">
+                    <div class="brand">
+                        <h1>Verificar Código</h1>
+                        <p>Enviamos un código de 6 dígitos a <strong id="recup-email-mostrado">-</strong>.</p>
+                    </div>
+
+                    <div class="info-box" style="margin-bottom: 1rem; font-size: 0.85rem;">
+                        <strong>Modo Desarrollo (Mock):</strong> El código de prueba enviado al correo es <code>482910</code>.
+                    </div>
+
+                    <div id="recup-codigo-error" class="alert alert-error" style="display:none;"></div>
+
+                    <form id="form-recup-codigo" onsubmit="verificarCodigoRecuperacion(event)">
+                        <div class="form-group">
+                            <label for="recup-codigo">Código de Verificación</label>
+                            <input type="text" id="recup-codigo" maxlength="6" inputmode="numeric" placeholder="Ingrese los 6 dígitos" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Validar Código</button>
+                    </form>
+
+                    <div style="text-align: center; margin-top: 1.2rem;">
+                        <button type="button" class="btn-link" onclick="mostrarPasoRecuperacion('correo')">
+                            Cambiar correo electrónico
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PASO 3: ESTABLECER NUEVA CONTRASEÑA -->
+                <div id="login-paso-nueva-clave" style="display:none;">
+                    <div class="brand">
+                        <h1>Nueva Contraseña</h1>
+                        <p>Defina su nueva clave de acceso al sistema.</p>
+                    </div>
+
+                    <div id="recup-clave-error" class="alert alert-error" style="display:none;"></div>
+
+                    <form id="form-recup-clave" onsubmit="confirmarNuevaContrasena(event)">
+                        <div class="form-group">
+                            <label for="recup-nueva-pass">Nueva Contraseña (mínimo 6 caracteres)</label>
+                            <input type="password" id="recup-nueva-pass" minlength="6" placeholder="Ingrese nueva contraseña" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="recup-confirmar-pass">Confirmar Contraseña</label>
+                            <input type="password" id="recup-confirmar-pass" minlength="6" placeholder="Repita la nueva contraseña" required>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-block">Guardar Contraseña</button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/login.js"></script>
+</body>
+</html>
